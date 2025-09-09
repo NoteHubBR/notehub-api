@@ -3,11 +3,11 @@ package br.com.notehub.domain.token;
 import br.com.notehub.application.dto.response.token.AuthRES;
 import br.com.notehub.domain.user.User;
 import com.auth0.jwt.exceptions.TokenExpiredException;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.UUID;
 
 @Service
 public interface TokenService {
@@ -24,15 +24,15 @@ public interface TokenService {
 
     String validateToken(String accessToken);
 
-    AuthRES auth(String username, String password) throws BadCredentialsException;
+    AuthRES auth(HttpServletRequest request, String username, String password) throws BadCredentialsException;
 
-    AuthRES authWithGoogleAcc(String token);
+    AuthRES authWithGoogleAcc(HttpServletRequest request, String token);
 
-    AuthRES authWithGitHubAcc(String code);
+    AuthRES authWithGitHubAcc(HttpServletRequest request, String code);
 
-    AuthRES recreateToken(UUID refreshToken) throws TokenExpiredException;
+    AuthRES recreateToken(HttpServletRequest request) throws TokenExpiredException;
 
-    void logout(String accessToken);
+    void logout(HttpServletRequest request);
 
     void cleanExpiredTokens();
 

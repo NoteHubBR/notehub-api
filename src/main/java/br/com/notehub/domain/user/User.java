@@ -68,8 +68,8 @@ public class User implements UserDetails {
 
     private boolean active;
 
-    @OneToOne(mappedBy = "user", orphanRemoval = true)
-    private Token token;
+    @OneToMany(mappedBy = "user", orphanRemoval = true)
+    private List<Token> token = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<UserHistory> history = new ArrayList<>();

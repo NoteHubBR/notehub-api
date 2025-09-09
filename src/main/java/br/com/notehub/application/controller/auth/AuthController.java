@@ -9,23 +9,23 @@ import br.com.notehub.application.dto.response.token.AuthRES;
 import br.com.notehub.domain.token.TokenService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.UUID;
-
 @RestController
 @CrossOrigin(origins = {"https://notehub.com.br"})
 @RequestMapping("/api/v1/auth")
-@SecurityRequirement(name = "bearer-key")
 @Tag(name = "Auth Controller", description = "Endpoints for authentication and authorization")
 @RequiredArgsConstructor
 public class AuthController {
@@ -37,74 +37,86 @@ public class AuthController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User authenticated successfully."),
             @ApiResponse(responseCode = "401", description = "Invalid password.", content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "400", description = "Missing or invalid X-Device-Id.", content = @Content(mediaType = "application/json")),
             @ApiResponse(responseCode = "403", description = "Email not confirmed.", content = @Content(mediaType = "application/json")),
             @ApiResponse(responseCode = "404", description = "User not found.", content = @Content(examples = {})),
             @ApiResponse(responseCode = "500", description = "Internal server error.", content = @Content(examples = {}))
     })
+    @Parameter(name = "X-Device-Id", in = ParameterIn.HEADER, required = true, schema = @Schema(format = "uuid"))
     @PostMapping("/login")
     public ResponseEntity<AuthRES> loginUser(
+            HttpServletRequest request,
             @Valid @RequestBody AuthREQ dto
     ) {
-        AuthRES token = service.auth(dto.username(), dto.password());
+        AuthRES token = service.auth(request, dto.username(), dto.password());
         return ResponseEntity.status(HttpStatus.OK).body(token);
     }
 
     @Operation(summary = "Login with Google", description = "Authenticates a user using Google OAuth2 token.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User authenticated successfully."),
-            @ApiResponse(responseCode = "400", description = "Invalid Google token.", content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "400", description = "Missing or invalid X-Device-Id or Google token.", content = @Content(mediaType = "application/json")),
             @ApiResponse(responseCode = "500", description = "Internal server error.", content = @Content(examples = {}))
     })
+    @Parameter(name = "X-Device-Id", in = ParameterIn.HEADER, required = true, schema = @Schema(format = "uuid"))
     @PostMapping("/login/google")
     public ResponseEntity<AuthRES> loginGoogleUser(
+            HttpServletRequest request,
             @Valid @RequestBody OAuth2GoogleREQ dto
     ) {
-        AuthRES token = service.authWithGoogleAcc(dto.token());
+        AuthRES token = service.authWithGoogleAcc(request, dto.token());
         return ResponseEntity.status(HttpStatus.OK).body(token);
     }
 
     @Operation(summary = "Login with GitHub", description = "Authenticates a user using GitHub OAuth2 token.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User authenticated successfully."),
-            @ApiResponse(responseCode = "400", description = "Invalid input data.", content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "400", description = "Missing or invalid X-Device-Id or input data.", content = @Content(mediaType = "application/json")),
             @ApiResponse(responseCode = "500", description = "Internal server error.", content = @Content(examples = {}))
     })
+    @Parameter(name = "X-Device-Id", in = ParameterIn.HEADER, required = true, schema = @Schema(format = "uuid"))
     @PostMapping("/login/github")
     public ResponseEntity<AuthRES> loginGitHubUser(
+            HttpServletRequest request,
             @Valid @RequestBody OAuthGitHubREQ dto
     ) {
-        AuthRES token = service.authWithGitHubAcc(dto.code());
+        AuthRES token = service.authWithGitHubAcc(request, dto.code());
         return ResponseEntity.status(HttpStatus.OK).body(token);
     }
 
     @Operation(summary = "Refresh token", description = "Generates a new access token using a refresh token.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "New access token created."),
-            @ApiResponse(responseCode = "400", description = "Invalid parameter.", content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "400", description = "Missing or invalid X-Device-Id or X-Refresh-Token.", content = @Content(mediaType = "application/json")),
             @ApiResponse(responseCode = "404", description = "Token not found, please log in again.", content = @Content(examples = {})),
             @ApiResponse(responseCode = "500", description = "Internal server error.", content = @Content(examples = {}))
     })
+    @Parameters(value = {
+            @Parameter(name = "X-Device-Id", in = ParameterIn.HEADER, required = true, schema = @Schema(format = "uuid")),
+            @Parameter(name = "X-Refresh-Token", in = ParameterIn.HEADER, required = true, schema = @Schema(format = "uuid"))
+    })
     @GetMapping("/refresh")
     public ResponseEntity<AuthRES> refreshToken(
-            @RequestParam("token") UUID refreshToken
+            HttpServletRequest request
     ) {
-        AuthRES token = service.recreateToken(refreshToken);
+        AuthRES token = service.recreateToken(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(token);
     }
 
-    @Operation(summary = "Logout user", description = "Logs out the user by invalidating the access token.")
+    @Operation(summary = "Logout user", description = "Logs out the user by invalidating the refresh token.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "User logged out successfully."),
+            @ApiResponse(responseCode = "400", description = "Missing or invalid X-Refresh-Token.", content = @Content(mediaType = "application/json")),
             @ApiResponse(responseCode = "403", description = "Invalid token."),
-            @ApiResponse(responseCode = "404", description = "Invalid access token."),
+            @ApiResponse(responseCode = "404", description = "Token not found."),
             @ApiResponse(responseCode = "500", description = "Internal server error.")
     })
+    @Parameter(name = "X-Refresh-Token", in = ParameterIn.HEADER, required = true, schema = @Schema(format = "uuid"))
     @DeleteMapping("/logout")
     public ResponseEntity<Void> logoutUser(
-            @Parameter(hidden = true) @RequestHeader("Authorization") String bearerToken
+            HttpServletRequest request
     ) {
-        String accessToken = bearerToken.replace("Bearer ", "");
-        service.logout(accessToken);
+        service.logout(request);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
@@ -116,7 +128,7 @@ public class AuthController {
             @ApiResponse(responseCode = "500", description = "Internal server error.", content = @Content(examples = {}))
     })
     @PostMapping("/change-password")
-    public ResponseEntity<String> requestPasswordChange(
+    public ResponseEntity<Void> requestPasswordChange(
             @Valid @RequestBody AuthChangeREQ dto
     ) {
         String jwt = service.generatePasswordChangeToken(dto.email());
@@ -132,7 +144,7 @@ public class AuthController {
             @ApiResponse(responseCode = "500", description = "Internal server error.", content = @Content(examples = {}))
     })
     @PostMapping("/change-email")
-    public ResponseEntity<String> requestEmailChange(
+    public ResponseEntity<Void> requestEmailChange(
             @Valid @RequestBody AuthChangeREQ dto
     ) {
         String jwt = service.generateEmailChangeToken(dto.email());

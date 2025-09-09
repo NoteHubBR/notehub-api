@@ -48,7 +48,7 @@ public class Notification {
 
     @Column(columnDefinition = "JSONB")
     @JdbcTypeCode(SqlTypes.JSON)
-    @Convert(converter = NotificationFieldInfoConverter.class)
+//    @Convert(converter = NotificationFieldInfoConverter.class)
     private Map<String, Object> info;
 
     public Notification(User from, User to, User related, Map<String, Object> info) {

@@ -39,6 +39,34 @@ public class ControllerAdvice {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
+    @ExceptionHandler(CustomExceptions.MissingDeviceException.class)
+    private ResponseEntity<List<CustomResponse>> handleMissingDeviceException(CustomExceptions.MissingDeviceException ex) {
+        List<FieldError> errors = new ArrayList<>();
+        errors.add(new FieldError("Headers", "Headers", ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors.stream().map(CustomResponse::new).toList());
+    }
+
+    @ExceptionHandler(CustomExceptions.InvalidDeviceException.class)
+    private ResponseEntity<List<CustomResponse>> handleInvalidDeviceException(CustomExceptions.InvalidDeviceException ex) {
+        List<FieldError> errors = new ArrayList<>();
+        errors.add(new FieldError("Headers", "Headers", ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors.stream().map(CustomResponse::new).toList());
+    }
+
+    @ExceptionHandler(CustomExceptions.MissingRefreshToken.class)
+    private ResponseEntity<List<CustomResponse>> handleMissingRefreshTokenException(CustomExceptions.MissingRefreshToken ex) {
+        List<FieldError> errors = new ArrayList<>();
+        errors.add(new FieldError("Headers", "Headers", ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors.stream().map(CustomResponse::new).toList());
+    }
+
+    @ExceptionHandler(CustomExceptions.InvalidRefreshTokenException.class)
+    private ResponseEntity<List<CustomResponse>> handleInvalidRefreshTokenException(CustomExceptions.InvalidRefreshTokenException ex) {
+        List<FieldError> errors = new ArrayList<>();
+        errors.add(new FieldError("Headers", "Headers", ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors.stream().map(CustomResponse::new).toList());
+    }
+
     @ExceptionHandler(MissingServletRequestParameterException.class)
     private ResponseEntity<List<CustomResponse>> handleMissingServletRequestParameterException(MissingServletRequestParameterException ex) {
         List<FieldError> errors = new ArrayList<>();

@@ -20,11 +20,11 @@ public record AuthRES(
         Payload token,
         PersonalUserRES user
 ) {
-    public AuthRES(Token token) {
+    public AuthRES(Token token, String accessToken) {
         this(
                 new Payload(
                         token.getId(),
-                        token.getAccessToken(),
+                        accessToken,
                         token.getCreatedAt().atZone(ZoneId.of("America/Sao_Paulo")).format(DateTimeFormatter.ofPattern("d/M/yy HH:mm", Locale.of("pt-BR"))),
                         token.getExpiresAt().atZone(ZoneId.of("America/Sao_Paulo")).format(DateTimeFormatter.ofPattern("d/M/yy HH:mm", Locale.of("pt-BR")))
                 ),

@@ -27,18 +27,24 @@ public class Token {
     private UUID id;
 
     @JoinColumn(name = "user_id")
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     private User user;
-
-    private String accessToken;
 
     private Instant createdAt = LocalDateTime.now().toInstant(ZoneOffset.of("-03:00"));
 
+    private String ip;
+
+    private UUID device;
+
+    private String agent;
+
     private Instant expiresAt;
 
-    public Token(User user, String accessToken, Instant expiresAt) {
+    public Token(User user, String ip, String agent, UUID device, Instant expiresAt) {
         this.user = user;
-        this.accessToken = accessToken;
+        this.ip = ip;
+        this.agent = agent;
+        this.device = device;
         this.expiresAt = expiresAt;
     }
 

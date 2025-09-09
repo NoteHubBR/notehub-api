@@ -30,6 +30,10 @@ public class SecurityConfig {
             "/api/v1/users/register", "/api/v1/auth/**"
     };
 
+    private static final String[] PUBLIC_DELETE_ROUTES = {
+            "/api/v1/auth/**"
+    };
+
     private static final String[] PUBLIC_GET_ROUTES = {
             "/", "/docs",
             "/api/v1/auth/refresh",
@@ -52,6 +56,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(req -> {
                     req.requestMatchers(PUBLIC_ALL_ROUTES).permitAll();
                     req.requestMatchers(HttpMethod.POST, PUBLIC_POST_ROUTES).permitAll();
+                    req.requestMatchers(HttpMethod.DELETE, PUBLIC_DELETE_ROUTES).permitAll();
                     req.requestMatchers(HttpMethod.GET, PUBLIC_GET_ROUTES).permitAll();
                     req.requestMatchers(HttpMethod.GET, PRIVATE_GET_ROUTES).hasRole("BASIC");
                     req.anyRequest().hasRole("BASIC");

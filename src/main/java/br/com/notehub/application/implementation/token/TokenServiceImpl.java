@@ -14,6 +14,7 @@ import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -51,6 +52,36 @@ public class TokenServiceImpl implements TokenService {
     private final TokenRepository repository;
     private final UserRepository userRepository;
     private final PasswordEncoder encoder;
+
+    private UUID validateDevice(HttpServletRequest request) {
+        String xDeviceId = request.getHeader("X-Device-Id");
+        if (xDeviceId == null) throw new CustomExceptions.MissingDeviceException();
+        UUID device;
+        try {
+            return device = UUID.fromString(xDeviceId);
+        } catch (IllegalArgumentException ex) {
+            throw new CustomExceptions.InvalidDeviceException();
+        }
+    }
+
+    private UUID validateRefreshToken(HttpServletRequest request) {
+        String xRefreshToken = request.getHeader("X-Refresh-Token");
+        if (xRefreshToken == null) throw new CustomExceptions.MissingRefreshToken();
+        UUID rToken;
+        try {
+            return rToken = UUID.fromString(xRefreshToken);
+        } catch (IllegalArgumentException ex) {
+            throw new CustomExceptions.InvalidRefreshTokenException();
+        }
+    }
+
+    private Token generateRefreshToken(HttpServletRequest request, User user) {
+        String ip = request.getRemoteAddr();
+        String agent = request.getHeader("User-Agent");
+        UUID device = validateDevice(request);
+        Instant expiresAt = getExpirationTime("refresh");
+        return new Token(user, ip, agent, device, expiresAt);
+    }
 
     private Map getUserInfoFromGoogle(String token) {
         String url = String.format("https://www.googleapis.com/oauth2/v1/userinfo?access_token=%s", token);
@@ -169,31 +200,29 @@ public class TokenServiceImpl implements TokenService {
         }
     }
 
-    private void deleteAndFlush(Token token) {
-        repository.delete(token);
-        repository.flush();
-    }
-
     @Transactional
     @Override
-    public AuthRES auth(String username, String password) throws BadCredentialsException {
+    public AuthRES auth(HttpServletRequest request, String username, String password) throws BadCredentialsException {
+
         User user = userRepository.findByUsername(username.toLowerCase()).orElseThrow(() -> new BadCredentialsException("username"));
         if (!user.isActive()) throw new DisabledException("Email não confirmado");
 
         boolean matches = encoder.matches(password, user.getPassword());
         if (!matches) throw new BadCredentialsException("password");
 
-        repository.findByUserId(user.getId()).ifPresent(this::deleteAndFlush);
+        Token token = generateRefreshToken(request, user);
+        repository.findByDevice(token.getDevice()).ifPresent(repository::delete);
+        repository.save(token);
 
-        String accessToken = generateToken(user);
-        Instant expiresAt = getExpirationTime("refresh");
-        return new AuthRES(repository.save(new Token(user, accessToken, expiresAt)));
+        return new AuthRES(token, generateToken(user));
+
     }
 
     @Transactional
     @Override
-    public AuthRES authWithGoogleAcc(String token) {
+    public AuthRES authWithGoogleAcc(HttpServletRequest request, String token) {
         try {
+
             Map info = getUserInfoFromGoogle(token);
             String id = (String) info.get("id");
             String email = (String) info.get("email");
@@ -204,12 +233,12 @@ public class TokenServiceImpl implements TokenService {
             User provided = new User(id, email, username, displayName, avatar);
 
             User user = userRepository.findByProviderId(id).orElseGet(() -> userRepository.save(provided));
-            repository.findByUserId(user.getId()).ifPresent(this::deleteAndFlush);
+            Token rToken = generateRefreshToken(request, user);
+            repository.findByDevice(rToken.getDevice()).ifPresent(repository::delete);
+            repository.save(rToken);
 
-            String accessToken = generateToken(user);
-            Instant expiresAt = getExpirationTime("refresh");
+            return new AuthRES(rToken, generateToken(user));
 
-            return new AuthRES(repository.save(new Token(user, accessToken, expiresAt)));
         } catch (JWTDecodeException exception) {
             throw new JWTDecodeException("Formato inválido");
         }
@@ -217,7 +246,7 @@ public class TokenServiceImpl implements TokenService {
 
     @Transactional
     @Override
-    public AuthRES authWithGitHubAcc(String code) {
+    public AuthRES authWithGitHubAcc(HttpServletRequest request, String code) {
         Map info = getUserInfoFromGitHub(code);
         Integer id = (Integer) info.get("id");
         String login = (String) info.get("login");
@@ -227,36 +256,41 @@ public class TokenServiceImpl implements TokenService {
         User provided = new User(id, username, displayName, avatar);
 
         User user = userRepository.findByProviderId(id.toString()).orElseGet(() -> userRepository.save(provided));
-        repository.findByUserId(user.getId()).ifPresent(this::deleteAndFlush);
+        Token token = generateRefreshToken(request, user);
+        repository.findByDevice(token.getDevice()).ifPresent(repository::delete);
+        repository.save(token);
 
-        String accessToken = generateToken(user);
-        Instant expiresAt = getExpirationTime("refresh");
+        return new AuthRES(token, generateToken(user));
 
-        return new AuthRES(repository.save(new Token(user, accessToken, expiresAt)));
     }
 
     @Transactional
     @Override
-    public AuthRES recreateToken(UUID refreshToken) throws TokenExpiredException {
-        Token token = repository.findById(refreshToken).orElseThrow(EntityNotFoundException::new);
+    public AuthRES recreateToken(HttpServletRequest request) throws TokenExpiredException {
+
+        UUID rToken = validateRefreshToken(request);
+        Token currentToken = repository.findById(rToken).orElseThrow(EntityNotFoundException::new);
 
         Instant now = LocalDateTime.now().toInstant(ZoneOffset.of("-03:00"));
-        if (token.getExpiresAt().isBefore(now)) {
-            throw new TokenExpiredException("Refresh Token expirado.", token.getExpiresAt());
+        if (currentToken.getExpiresAt().isBefore(now)) {
+            throw new TokenExpiredException("Refresh Token expirado.", currentToken.getExpiresAt());
         }
 
-        User user = token.getUser();
-        String jwt = generateToken(user);
-        Instant expiresAt = getExpirationTime("refresh");
+        User user = currentToken.getUser();
+        Token newToken = generateRefreshToken(request, user);
+        repository.findByDevice(newToken.getDevice()).ifPresent(repository::delete);
+        repository.save(newToken);
 
-        deleteAndFlush(token);
-        return new AuthRES(repository.save(new Token(user, jwt, expiresAt)));
+        return new AuthRES(newToken, generateToken(user));
+
     }
 
     @Transactional
     @Override
-    public void logout(String accessToken) {
-        repository.findByAccessToken(accessToken).ifPresent(repository::delete);
+    public void logout(HttpServletRequest request) {
+        UUID rToken = validateRefreshToken(request);
+        Token token = repository.findById(rToken).orElseThrow(EntityNotFoundException::new);
+        repository.delete(token);
     }
 
     @Override

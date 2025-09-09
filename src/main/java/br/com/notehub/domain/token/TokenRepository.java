@@ -13,9 +13,7 @@ import java.util.UUID;
 @Repository
 public interface TokenRepository extends JpaRepository<Token, UUID> {
 
-    Optional<Token> findByUserId(UUID id);
-
-    Optional<Token> findByAccessToken(String accessToken);
+    Optional<Token> findByDevice(UUID id);
 
     @Query("SELECT t FROM Token t WHERE t.expiresAt < :now")
     List<Token> findExpiredTokens(@Param("now") Instant now);

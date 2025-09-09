@@ -1,10 +1,36 @@
 package br.com.notehub.infra.exception;
 
+import java.util.UUID;
+
 public class CustomExceptions {
 
     public static abstract class BusinessException extends RuntimeException {
         public BusinessException(String message) {
             super(message);
+        }
+    }
+
+    public static class MissingDeviceException extends BusinessException {
+        public MissingDeviceException() {
+            super(String.format("X-Device-Id faltando, use %s no lugar.", UUID.randomUUID()));
+        }
+    }
+
+    public static class InvalidDeviceException extends BusinessException {
+        public InvalidDeviceException() {
+            super(String.format("X-Device-Id errado, use %s no lugar.", UUID.randomUUID()));
+        }
+    }
+
+    public static class MissingRefreshToken extends BusinessException {
+        public MissingRefreshToken() {
+            super("X-Refresh-Token faltando.");
+        }
+    }
+
+    public static class InvalidRefreshTokenException extends BusinessException {
+        public InvalidRefreshTokenException() {
+            super("X-Refresh-Token errado.");
         }
     }
 
