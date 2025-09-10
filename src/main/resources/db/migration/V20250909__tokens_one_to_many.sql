@@ -1,0 +1,11 @@
+ALTER TABLE tokens DROP CONSTRAINT IF EXISTS tokens_user_id_key;
+
+ALTER TABLE tokens DROP COLUMN access_token;
+ALTER TABLE tokens ADD COLUMN ip VARCHAR(255);
+ALTER TABLE tokens ADD COLUMN agent VARCHAR(1024);
+ALTER TABLE tokens ADD COLUMN device UUID;
+
+CREATE INDEX IF NOT EXISTS idx_tokens_user_id ON tokens(user_id);
+
+ALTER TABLE tokens DROP CONSTRAINT IF EXISTS fk_user;
+ALTER TABLE tokens ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;

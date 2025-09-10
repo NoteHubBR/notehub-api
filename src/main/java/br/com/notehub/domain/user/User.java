@@ -26,9 +26,9 @@ import java.util.*;
 @Table(name = "users")
 @NoArgsConstructor
 @Data
-@JsonIgnoreProperties({"token", "history", "notes", "comments", "replies", "flames", "followers", "following", "receivedNotifications", "sentNotifications", "relatedNotifications"})
-@ToString(exclude = {"token", "history", "notes", "comments", "replies", "flames", "followers", "following", "receivedNotifications", "sentNotifications", "relatedNotifications"})
-@EqualsAndHashCode(exclude = {"token", "history", "notes", "comments", "replies", "flames", "followers", "following", "receivedNotifications", "sentNotifications", "relatedNotifications"})
+@JsonIgnoreProperties({"tokens", "history", "notes", "comments", "replies", "flames", "followers", "following", "receivedNotifications", "sentNotifications", "relatedNotifications"})
+@ToString(exclude = {"tokens", "history", "notes", "comments", "replies", "flames", "followers", "following", "receivedNotifications", "sentNotifications", "relatedNotifications"})
+@EqualsAndHashCode(exclude = {"tokens", "history", "notes", "comments", "replies", "flames", "followers", "following", "receivedNotifications", "sentNotifications", "relatedNotifications"})
 public class User implements UserDetails {
 
     @Id
@@ -69,7 +69,7 @@ public class User implements UserDetails {
     private boolean active;
 
     @OneToMany(mappedBy = "user", orphanRemoval = true)
-    private List<Token> token = new ArrayList<>();
+    private List<Token> tokens = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<UserHistory> history = new ArrayList<>();
