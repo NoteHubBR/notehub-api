@@ -6,6 +6,7 @@ import br.com.notehub.domain.history.UserHistoryService;
 import br.com.notehub.domain.note.NoteService;
 import br.com.notehub.domain.notification.NotificationService;
 import br.com.notehub.domain.token.TokenService;
+import br.com.notehub.domain.user.Host;
 import br.com.notehub.domain.user.User;
 import br.com.notehub.domain.user.UserRepository;
 import br.com.notehub.domain.user.UserService;
@@ -49,7 +50,7 @@ public class UserServiceImpl implements UserService {
     @SneakyThrows
     private <T> void changeField(UUID idFromToken, String field, Function<User, T> getter, Consumer<User> setter) {
         User user = repository.findById(idFromToken).orElseThrow(EntityNotFoundException::new);
-        if (!Objects.equals(user.getHost(), "NoteHub") && (Objects.equals(field, "email") | Objects.equals(field, "password"))) {
+        if (!Objects.equals(user.getHost(), Host.NOTEHUB) && (Objects.equals(field, "email") | Objects.equals(field, "password"))) {
             throw new UnknownHostException("Host não autorizado.");
         }
         T oldValue = getter.apply(user);
@@ -60,8 +61,8 @@ public class UserServiceImpl implements UserService {
         historian.setHistory(user, field, String.valueOf(oldValue), newValue.toString());
     }
 
-    private void validateHost(String host) {
-        if (!Objects.equals(host, "NoteHub")) throw new CustomExceptions.HostNotAllowedException();
+    private void validateHost(Host host) {
+        if (!Objects.equals(host, Host.NOTEHUB)) throw new CustomExceptions.HostNotAllowedException();
     }
 
     private String validatePassword(String oldPassword, String newPassword) {

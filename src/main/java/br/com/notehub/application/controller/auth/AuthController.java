@@ -56,6 +56,7 @@ public class AuthController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User authenticated successfully."),
             @ApiResponse(responseCode = "400", description = "Missing or invalid X-Device-Id or Google token.", content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "406", description = "Email already exists.", content = @Content(mediaType = "application/json")),
             @ApiResponse(responseCode = "500", description = "Internal server error.", content = @Content(examples = {}))
     })
     @Parameter(name = "X-Device-Id", in = ParameterIn.HEADER, required = true, schema = @Schema(format = "uuid"))
@@ -68,10 +69,11 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.OK).body(token);
     }
 
-    @Operation(summary = "Login with GitHub", description = "Authenticates a user using GitHub OAuth2 token.")
+    @Operation(summary = "Login with GitHub", description = "Authenticates a user using GitHub OAuth token.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User authenticated successfully."),
             @ApiResponse(responseCode = "400", description = "Missing or invalid X-Device-Id or input data.", content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "406", description = "Email already exists.", content = @Content(mediaType = "application/json")),
             @ApiResponse(responseCode = "500", description = "Internal server error.", content = @Content(examples = {}))
     })
     @Parameter(name = "X-Device-Id", in = ParameterIn.HEADER, required = true, schema = @Schema(format = "uuid"))
