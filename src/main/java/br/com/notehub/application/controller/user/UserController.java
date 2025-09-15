@@ -7,7 +7,9 @@ import br.com.notehub.application.dto.response.user.CreateUserRES;
 import br.com.notehub.application.dto.response.user.DetailUserRES;
 import br.com.notehub.domain.user.User;
 import br.com.notehub.domain.user.UserService;
+import br.com.notehub.infra.exception.CustomExceptions;
 import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -29,6 +31,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -50,6 +53,14 @@ public class UserController {
         if (bearerToken == null) return null;
         String idFromToken = JWT.decode(bearerToken.replace("Bearer ", "")).getSubject();
         return UUID.fromString(idFromToken);
+    }
+
+    private String getSubject(String bearerToken, String expectedScope) {
+        DecodedJWT decoded = JWT.decode(bearerToken.replace("Bearer ", ""));
+        String emailFromToken = decoded.getSubject();
+        String scope = decoded.getClaim("scope").asString();
+        if (Objects.equals(expectedScope, scope)) return emailFromToken;
+        throw new CustomExceptions.ScopeNotAllowedException();
     }
 
     @Operation(summary = "Register a new user", description = "Creates a new user account and sends an activation email.")
@@ -92,7 +103,7 @@ public class UserController {
             @Parameter(hidden = true) @RequestHeader("Authorization") String token,
             @Valid @RequestBody ChangePasswordREQ dto
     ) {
-        String emailFromToken = JWT.decode(token.replace("Bearer ", "")).getSubject();
+        String emailFromToken = getSubject(token, "password");
         service.changePassword(emailFromToken, dto.password());
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
@@ -111,7 +122,7 @@ public class UserController {
             @Parameter(hidden = true) @RequestHeader("Authorization") String token,
             @Valid @RequestBody ChangeEmailREQ dto
     ) {
-        String emailFromToken = JWT.decode(token.replace("Bearer ", "")).getSubject();
+        String emailFromToken = getSubject(token, "email");
         service.changeEmail(emailFromToken, dto.email());
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }

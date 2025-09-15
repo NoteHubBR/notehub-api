@@ -81,7 +81,7 @@ public class TokenServiceImpl implements TokenService {
         if (Objects.equals(host, Host.NOTEHUB)) throw new CustomExceptions.HostNotAllowedException();
     }
 
-    private void validateHost(Host host) {
+    private void validateExternalHost(Host host) {
         if (!Objects.equals(host, Host.NOTEHUB)) throw new CustomExceptions.HostNotAllowedException();
     }
 
@@ -133,12 +133,13 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public String generatePasswordChangeToken(String email) {
         User user = userRepository.findByEmail(email).orElseThrow(EntityNotFoundException::new);
-        validateHost(user.getHost());
+        validateExternalHost(user.getHost());
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
             return JWT.create()
                     .withIssuer("NoteHub")
                     .withSubject(email)
+                    .withClaim("scope", "password")
                     .withExpiresAt(getExpirationTime("access"))
                     .sign(algorithm);
         } catch (JWTCreationException exception) {
@@ -148,13 +149,12 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public String generateEmailChangeToken(String email) {
-        User user = userRepository.findByEmail(email).orElseThrow(EntityNotFoundException::new);
-        validateHost(user.getHost());
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
             return JWT.create()
                     .withIssuer("NoteHub")
                     .withSubject(email)
+                    .withClaim("scope", "email")
                     .withExpiresAt(getExpirationTime("access"))
                     .sign(algorithm);
         } catch (JWTCreationException exception) {

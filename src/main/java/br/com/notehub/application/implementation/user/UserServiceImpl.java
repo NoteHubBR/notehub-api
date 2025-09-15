@@ -6,7 +6,6 @@ import br.com.notehub.domain.history.UserHistoryService;
 import br.com.notehub.domain.note.NoteService;
 import br.com.notehub.domain.notification.NotificationService;
 import br.com.notehub.domain.token.TokenService;
-import br.com.notehub.domain.user.Host;
 import br.com.notehub.domain.user.User;
 import br.com.notehub.domain.user.UserRepository;
 import br.com.notehub.domain.user.UserService;
@@ -55,10 +54,6 @@ public class UserServiceImpl implements UserService {
         if (Objects.equals(oldValue, newValue)) return;
         repository.save(user);
         historian.setHistory(user, field, String.valueOf(oldValue), newValue.toString());
-    }
-
-    private void validateHost(Host host) {
-        if (!Objects.equals(host, Host.NOTEHUB)) throw new CustomExceptions.HostNotAllowedException();
     }
 
     private String validatePassword(String oldPassword, String newPassword) {
@@ -150,7 +145,6 @@ public class UserServiceImpl implements UserService {
     public void changeEmail(String oldEmail, String newEmail) {
         validateEmail(oldEmail, newEmail);
         User entity = repository.findByEmail(oldEmail).orElseThrow(EntityNotFoundException::new);
-        validateHost(entity.getHost());
         changeField(entity.getId(), "email", User::getEmail, user -> user.setEmail(newEmail.toLowerCase()));
     }
 
