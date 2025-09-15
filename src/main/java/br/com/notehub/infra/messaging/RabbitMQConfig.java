@@ -13,6 +13,9 @@ public class RabbitMQConfig {
     @Value("${broker.queue.activation.name}")
     private String activation;
 
+    @Value("${broker.queue.secret.name}")
+    private String secret;
+
     @Value("${broker.queue.password.name}")
     private String password;
 
@@ -22,6 +25,11 @@ public class RabbitMQConfig {
     @Bean
     public Queue activationQueue() {
         return new Queue(activation, true);
+    }
+
+    @Bean
+    public Queue secretQueue() {
+        return new Queue(secret, true);
     }
 
     @Bean

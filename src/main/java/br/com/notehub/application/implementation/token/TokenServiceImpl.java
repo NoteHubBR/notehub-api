@@ -26,9 +26,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -73,6 +75,10 @@ public class TokenServiceImpl implements TokenService {
         UUID device = validateDevice(request);
         Instant expiresAt = getExpirationTime("refresh");
         return new Token(user, ip, agent, device, expiresAt);
+    }
+
+    private void validateInternalHost(Host host) {
+        if (Objects.equals(host, Host.NOTEHUB)) throw new CustomExceptions.HostNotAllowedException();
     }
 
     private void validateHost(Host host) {
@@ -154,6 +160,17 @@ public class TokenServiceImpl implements TokenService {
         } catch (JWTCreationException exception) {
             throw new JWTCreationException("👀", exception);
         }
+    }
+
+    @Override
+    public String generateSecretKey(String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(EntityNotFoundException::new);
+        validateInternalHost(user.getHost());
+        SecureRandom secureRandom = new SecureRandom();
+        Base64.Encoder urlEncoder = Base64.getUrlEncoder().withoutPadding();
+        byte[] bytes = new byte[32];
+        secureRandom.nextBytes(bytes);
+        return urlEncoder.encodeToString(bytes);
     }
 
     @Override

@@ -24,7 +24,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.net.UnknownHostException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -50,9 +49,6 @@ public class UserServiceImpl implements UserService {
     @SneakyThrows
     private <T> void changeField(UUID idFromToken, String field, Function<User, T> getter, Consumer<User> setter) {
         User user = repository.findById(idFromToken).orElseThrow(EntityNotFoundException::new);
-        if (!Objects.equals(user.getHost(), Host.NOTEHUB) && (Objects.equals(field, "email") | Objects.equals(field, "password"))) {
-            throw new UnknownHostException("Host não autorizado.");
-        }
         T oldValue = getter.apply(user);
         setter.accept(user);
         T newValue = getter.apply(user);
@@ -145,7 +141,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public void changePassword(String email, String newPassword) {
         User entity = repository.findByEmail(email).orElseThrow(EntityNotFoundException::new);
-        validateHost(entity.getHost());
         String password = validatePassword(entity.getPassword(), newPassword);
         changeField(entity.getId(), "password", User::getPassword, user -> user.setPassword(password));
     }
