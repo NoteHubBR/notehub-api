@@ -3,6 +3,7 @@ package br.com.notehub.adapter.consumer;
 import br.com.notehub.adapter.consumer.dto.ActivationDTO;
 import br.com.notehub.adapter.consumer.dto.EmailChangeDTO;
 import br.com.notehub.adapter.consumer.dto.PasswordChangeDTO;
+import br.com.notehub.adapter.consumer.dto.SecretKeyGenerationDTO;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,16 @@ public class MailConsumer {
     private String mailFrom;
 
     public void sendActivationMail(ActivationDTO dto) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, false, "utf-8");
+        helper.setFrom(String.format("%s <%s>", friendlyName, mailFrom));
+        helper.setTo(dto.mailTo());
+        helper.setSubject(dto.subject());
+        helper.setText(dto.text(), true);
+        mailSender.send(message);
+    }
+
+    public void sendSecretKeyMail(SecretKeyGenerationDTO dto) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, false, "utf-8");
         helper.setFrom(String.format("%s <%s>", friendlyName, mailFrom));
@@ -59,6 +70,15 @@ public class MailConsumer {
     public void activationQueueListenner(@Payload ActivationDTO dto) throws MessagingException {
         try {
             sendActivationMail(dto);
+        } catch (MessagingException exception) {
+            System.out.println(exception.getMessage());
+        }
+    }
+
+    @RabbitListener(queues = "${broker.queue.secret.name}")
+    public void secretQueueListenner(@Payload SecretKeyGenerationDTO dto) throws MessagingException {
+        try {
+            sendSecretKeyMail(dto);
         } catch (MessagingException exception) {
             System.out.println(exception.getMessage());
         }

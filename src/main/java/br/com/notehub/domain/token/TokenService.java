@@ -22,6 +22,8 @@ public interface TokenService {
 
     String generateEmailChangeToken(String email);
 
+    String generateSecretKey(String email);
+
     String validateToken(String accessToken);
 
     AuthRES auth(HttpServletRequest request, String username, String password) throws BadCredentialsException;

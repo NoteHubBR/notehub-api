@@ -56,7 +56,8 @@ public class User implements UserDetails {
 
     private String password;
 
-    private String host;
+    @Convert(converter = HostConverter.class)
+    private Host host;
 
     private boolean profilePrivate = false;
 
@@ -110,7 +111,7 @@ public class User implements UserDetails {
     private int followersCount = 0;
 
     public User(String email, String username, String displayName, String password) {
-        this.host = "NoteHub";
+        this.host = Host.NOTEHUB;
         this.email = email;
         this.displayName = displayName;
         this.username = username;
@@ -118,19 +119,10 @@ public class User implements UserDetails {
         this.active = false;
     }
 
-    public User(String id, String email, String username, String displayName, String avatar) {
+    public User(String id, Host host, String email, String username, String displayName, String avatar) {
         this.providerId = id;
-        this.host = "Google";
+        this.host = host;
         this.email = email;
-        this.username = username.toLowerCase();
-        this.displayName = displayName;
-        this.avatar = avatar;
-        this.active = true;
-    }
-
-    public User(Integer id, String username, String displayName, String avatar) {
-        this.providerId = id.toString();
-        this.host = "GitHub";
         this.username = username.toLowerCase();
         this.displayName = displayName;
         this.avatar = avatar;

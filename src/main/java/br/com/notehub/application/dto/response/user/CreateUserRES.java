@@ -1,5 +1,6 @@
 package br.com.notehub.application.dto.response.user;
 
+import br.com.notehub.domain.user.Host;
 import br.com.notehub.domain.user.User;
 
 import java.util.UUID;
@@ -9,7 +10,7 @@ public record CreateUserRES(
         String email,
         String username,
         String display_name,
-        String host,
+        Host host,
         boolean profile_private,
         boolean sponsor,
         Long score

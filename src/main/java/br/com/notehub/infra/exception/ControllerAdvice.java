@@ -182,6 +182,13 @@ public class ControllerAdvice {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errors.stream().map(CustomResponse::new).toList());
     }
 
+    @ExceptionHandler(CustomExceptions.ScopeNotAllowedException.class)
+    private ResponseEntity<List<CustomResponse>> handleScopeNotAllowedException(CustomExceptions.ScopeNotAllowedException ex) {
+        List<FieldError> errors = new ArrayList<>();
+        errors.add(new FieldError("token", "scope", ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errors.stream().map(CustomResponse::new).toList());
+    }
+
     @ExceptionHandler(CustomExceptions.SamePasswordException.class)
     private ResponseEntity<List<CustomResponse>> handleSamePasswordException(CustomExceptions.SamePasswordException ex) {
         List<FieldError> errors = new ArrayList<>();

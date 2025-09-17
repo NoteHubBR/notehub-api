@@ -7,6 +7,7 @@ import br.com.notehub.application.dto.request.token.OAuth2GoogleREQ;
 import br.com.notehub.application.dto.request.token.OAuthGitHubREQ;
 import br.com.notehub.application.dto.response.token.AuthRES;
 import br.com.notehub.domain.token.TokenService;
+import br.com.notehub.domain.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -31,6 +32,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final TokenService service;
+    private final UserService userService;
     private final MailProducer producer;
 
     @Operation(summary = "Login user", description = "Authenticates a user with username and password.")
@@ -56,6 +58,7 @@ public class AuthController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User authenticated successfully."),
             @ApiResponse(responseCode = "400", description = "Missing or invalid X-Device-Id or Google token.", content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "406", description = "Email already exists.", content = @Content(mediaType = "application/json")),
             @ApiResponse(responseCode = "500", description = "Internal server error.", content = @Content(examples = {}))
     })
     @Parameter(name = "X-Device-Id", in = ParameterIn.HEADER, required = true, schema = @Schema(format = "uuid"))
@@ -68,10 +71,11 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.OK).body(token);
     }
 
-    @Operation(summary = "Login with GitHub", description = "Authenticates a user using GitHub OAuth2 token.")
+    @Operation(summary = "Login with GitHub", description = "Authenticates a user using GitHub OAuth token.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User authenticated successfully."),
             @ApiResponse(responseCode = "400", description = "Missing or invalid X-Device-Id or input data.", content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "406", description = "Email already exists.", content = @Content(mediaType = "application/json")),
             @ApiResponse(responseCode = "500", description = "Internal server error.", content = @Content(examples = {}))
     })
     @Parameter(name = "X-Device-Id", in = ParameterIn.HEADER, required = true, schema = @Schema(format = "uuid"))
@@ -118,6 +122,23 @@ public class AuthController {
     ) {
         service.logout(request);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    @Operation(summary = "Request secret key", description = "Generates a secret key for user deletion and sends it via email.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "202", description = "Email sent successfully."),
+            @ApiResponse(responseCode = "400", description = "Invalid input data.", content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "404", description = "Account not found.", content = @Content(examples = {})),
+            @ApiResponse(responseCode = "500", description = "Internal server error.", content = @Content(examples = {}))
+    })
+    @PostMapping("/secret-key")
+    public ResponseEntity<Void> requestSecretKey(
+            @Valid @RequestBody AuthChangeREQ dto
+    ) {
+        String secretKey = service.generateSecretKey(dto.email());
+        userService.changePassword(dto.email(), secretKey);
+        producer.publishAccountSecretKeyGenerationMessage(dto.email(), secretKey);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).build();
     }
 
     @Operation(summary = "Request user password change", description = "Generates a token for password change and sends it via email.")

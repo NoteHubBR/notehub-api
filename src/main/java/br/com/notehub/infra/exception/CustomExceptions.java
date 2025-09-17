@@ -34,6 +34,12 @@ public class CustomExceptions {
         }
     }
 
+    public static class ScopeNotAllowedException extends BusinessException {
+        public ScopeNotAllowedException() {
+            super("Escopo não autorizado.");
+        }
+    }
+
     public static class SamePasswordException extends BusinessException {
         public SamePasswordException() {
             super("Senha atual.");
