@@ -63,6 +63,8 @@ public class User implements UserDetails {
 
     private boolean sponsor = false;
 
+    private boolean blocked = false;
+
     private Long score = 0L;
 
     private Instant createdAt = LocalDateTime.now().toInstant(ZoneOffset.of("-03:00"));

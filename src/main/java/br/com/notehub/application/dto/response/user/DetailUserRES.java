@@ -17,7 +17,8 @@ public record DetailUserRES(
         int followers_count,
         int following_count,
         boolean profile_private,
-        boolean sponsor
+        boolean sponsor,
+        boolean blocked
 ) {
     public DetailUserRES(User user) {
         this(
@@ -31,7 +32,8 @@ public record DetailUserRES(
                 user.getFollowersCount(),
                 user.getFollowingCount(),
                 user.isProfilePrivate(),
-                user.isSponsor()
+                user.isSponsor(),
+                user.isBlocked()
         );
     }
 }

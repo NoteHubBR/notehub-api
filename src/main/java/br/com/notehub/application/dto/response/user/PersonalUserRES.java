@@ -16,6 +16,7 @@ public record PersonalUserRES(
         Host host,
         boolean profile_private,
         boolean sponsor,
+        boolean blocked,
         Long score,
         int notes_count,
         int followers_count,

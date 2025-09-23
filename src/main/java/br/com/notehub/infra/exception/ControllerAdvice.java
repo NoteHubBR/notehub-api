@@ -161,6 +161,22 @@ public class ControllerAdvice {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errors.stream().map(CustomResponse::new).toList());
     }
 
+    @ExceptionHandler(CustomExceptions.UserBlockedException.class)
+    private ResponseEntity<List<CustomResponse>> handleUserBlockedException(CustomExceptions.UserBlockedException ex) {
+        List<FieldError> errors = new ArrayList<>();
+        return switch (ex.getMessage()) {
+            case "avatar" -> {
+                errors.add(new FieldError("user", "avatar", "Usuário bloqueado."));
+                yield ResponseEntity.status(HttpStatus.FORBIDDEN).body(errors.stream().map(CustomResponse::new).toList());
+            }
+            case "banner" -> {
+                errors.add(new FieldError("user", "banner", "Usuário bloqueado."));
+                yield ResponseEntity.status(HttpStatus.FORBIDDEN).body(errors.stream().map(CustomResponse::new).toList());
+            }
+            default -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        };
+    }
+
     @ExceptionHandler(JWTCreationException.class)
     private ResponseEntity<List<CustomResponse>> handleJWTCreationException(JWTCreationException ex) {
         List<FieldError> errors = new ArrayList<>();
