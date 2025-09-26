@@ -11,8 +11,8 @@
 </div>
 <br>
 <div align="center">
-  <a href="https://github.com/notehubbr/notehub-api/releases/tag/v1.5">
-    <img width="100px" height="25px" src="https://img.shields.io/badge/notehub-v1.0-7c3aed">
+  <a href="https://github.com/notehubbr/notehub-api/releases/tag/v1.6">
+    <img width="100px" height="25px" src="https://img.shields.io/badge/notehub-v1.6-7c3aed">
   </a>
 </div>
 
@@ -71,8 +71,6 @@
 
 2. Em docker-compose.yml comente os blocos:
 
-> Em ambiente de desenvolvimento será utilizado o banco de dados em memória e a aplicação será executada pela IDE.
-
   ```docker
   # postgres:
   #   image: postgres:14
@@ -104,6 +102,8 @@
   #   postgres_data:
   ```
 
+> Em ambiente de desenvolvimento será utilizado o banco de dados em memória e a aplicação será executada pela IDE.
+
 3. Suba a aplicação com Docker Compose:
 
   ```bash
@@ -115,7 +115,7 @@
 > O arquivo .env só atende ao ambiente de produção.
 
   ```properties
-    api.server.host=${SERVER:http://localhost:8080}
+api.server.host=${SERVER:http://localhost:8080}
 api.client.host=${http://localhost:3000}
 api.server.security.token.secret=${SECRET:seu-segredo}
 oauth.github.client.id=${GHCI:seu-github-client-id}
@@ -137,7 +137,7 @@ spring.mail.password=${SPRING_MAIL_PASSWORD:}
 > O banco de dados em memória não oferece suporte ao tipo de coluna JSON/JSONB.
 
   ```java
-    // @Column(columnDefinition = "JSONB")
+// @Column(columnDefinition = "JSONB")
 // @JdbcTypeCode(SqlTypes.JSON)
 @Convert(converter = NotificationFieldInfoConverter.class)
 private Map<String, Object> info;
