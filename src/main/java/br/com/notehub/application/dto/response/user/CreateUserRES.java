@@ -13,6 +13,7 @@ public record CreateUserRES(
         Host host,
         boolean profile_private,
         boolean sponsor,
+        boolean blocked,
         Long score
 ) {
     public CreateUserRES(User user) {
@@ -24,6 +25,7 @@ public record CreateUserRES(
                 user.getHost(),
                 user.isProfilePrivate(),
                 user.isSponsor(),
+                user.isBlocked(),
                 user.getScore()
         );
     }

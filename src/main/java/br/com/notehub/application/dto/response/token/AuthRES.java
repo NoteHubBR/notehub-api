@@ -40,6 +40,7 @@ public record AuthRES(
                         token.getUser().getHost(),
                         token.getUser().isProfilePrivate(),
                         token.getUser().isSponsor(),
+                        token.getUser().isBlocked(),
                         token.getUser().getScore(),
                         token.getUser().getNotesCount(),
                         token.getUser().getFollowersCount(),

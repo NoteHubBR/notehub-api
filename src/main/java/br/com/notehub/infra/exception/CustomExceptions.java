@@ -76,4 +76,10 @@ public class CustomExceptions {
         }
     }
 
+    public static class UserBlockedException extends BusinessException {
+        public UserBlockedException(String message) {
+            super(message);
+        }
+    }
+
 }

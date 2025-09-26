@@ -52,8 +52,9 @@ public class UserServiceImpl implements UserService {
         setter.accept(user);
         T newValue = getter.apply(user);
         if (Objects.equals(oldValue, newValue)) return;
+        if (user.isBlocked() && (field.equals("avatar") || field.equals("banner"))) throw new CustomExceptions.UserBlockedException(field);
         repository.save(user);
-        historian.setHistory(user, field, String.valueOf(oldValue), newValue.toString());
+        historian.setHistory(user, field, String.valueOf(oldValue), String.valueOf(newValue));
     }
 
     private String validatePassword(String oldPassword, String newPassword) {
