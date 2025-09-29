@@ -10,7 +10,7 @@
     </parent>
     <groupId>br.com.notehub</groupId>
     <artifactId>NoteHub</artifactId>
-    <version>1.6.0</version>
+    <version>1.6.1</version>
     <name>NoteHub</name>
     <description>https://notehub.com.br</description>
     <url/>
