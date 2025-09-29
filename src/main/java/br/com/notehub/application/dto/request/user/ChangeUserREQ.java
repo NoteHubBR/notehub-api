@@ -11,7 +11,7 @@ public record ChangeUserREQ(
         @NoForbiddenWords(message = "Não pode")
         @NotBlank(message = "Não pode ser vazio")
         @Pattern(
-                regexp = "^[a-zA-Z0-9_.]+$",
+                regexp = "^[a-zA-Z0-9_.-]+$",
                 message = "Apenas letras, números, _ e ."
         )
         @Size(min = 2, max = 12, message = "Tamanho inválido")
