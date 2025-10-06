@@ -22,6 +22,9 @@ public class RabbitMQConfig {
     @Value("${broker.queue.email.name}")
     private String email;
 
+    @Value("${broker.queue.topic.name}")
+    private String topic;
+
     @Bean
     public Queue activationQueue() {
         return new Queue(activation, true);
@@ -40,6 +43,11 @@ public class RabbitMQConfig {
     @Bean
     public Queue emailQueue() {
         return new Queue(email, true);
+    }
+
+    @Bean
+    public Queue topicQueue() {
+        return new Queue(topic, true);
     }
 
     @Bean

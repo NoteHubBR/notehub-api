@@ -240,15 +240,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Page<User> findAll(Pageable pageable, String q) {
-        return repository.findAllActiveUsersByUsernameOrDisplayName(pageable, q);
-    }
-
-    @Override
     public User getUser(String username) {
         User user = repository.findByUsername(username).orElseThrow(EntityNotFoundException::new);
         validateActiveField(user.isActive());
         return user;
+    }
+
+    @Override
+    public List<User> getAllActiveUsers() {
+        return repository.findAllByActiveTrue();
+    }
+
+    @Override
+    public Page<User> findAll(Pageable pageable, String q) {
+        return repository.findAllActiveUsersByUsernameOrDisplayName(pageable, q);
     }
 
     @Transactional(readOnly = true)

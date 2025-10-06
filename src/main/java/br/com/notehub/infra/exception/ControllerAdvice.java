@@ -39,6 +39,13 @@ public class ControllerAdvice {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
+    @ExceptionHandler(CustomExceptions.InvalidSecretException.class)
+    private ResponseEntity<List<CustomResponse>> handleInvalidSecretException(CustomExceptions.InvalidSecretException ex) {
+        List<FieldError> errors = new ArrayList<>();
+        errors.add(new FieldError("Headers", "Headers", ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errors.stream().map(CustomResponse::new).toList());
+    }
+
     @ExceptionHandler(CustomExceptions.MissingDeviceException.class)
     private ResponseEntity<List<CustomResponse>> handleMissingDeviceException(CustomExceptions.MissingDeviceException ex) {
         List<FieldError> errors = new ArrayList<>();

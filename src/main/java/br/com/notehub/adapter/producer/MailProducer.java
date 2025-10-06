@@ -1,9 +1,6 @@
 package br.com.notehub.adapter.producer;
 
-import br.com.notehub.adapter.producer.dto.ActivationDTO;
-import br.com.notehub.adapter.producer.dto.EmailChangeDTO;
-import br.com.notehub.adapter.producer.dto.PasswordChangeDTO;
-import br.com.notehub.adapter.producer.dto.SecretKeyGenerationDTO;
+import br.com.notehub.adapter.producer.dto.*;
 import br.com.notehub.domain.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -26,6 +23,9 @@ public class MailProducer {
     @Value("${broker.queue.email.name}")
     private String emailRoutingKey;
 
+    @Value("${broker.queue.topic.name}")
+    private String topicRoutingKey;
+
     @Value("${api.client.host}")
     private String client;
 
@@ -37,7 +37,7 @@ public class MailProducer {
     }
 
     public void publishAccountSecretKeyGenerationMessage(String mailTo, String secretKey) {
-        var message = SecretKeyGenerationDTO.of(mailTo, secretKey);
+        var message = SecretKeyGenerationDTO.of(client, mailTo, secretKey);
         rabbitTemplate.convertAndSend("", secretRoutingKey, message);
     }
 
@@ -49,6 +49,11 @@ public class MailProducer {
     public void publishAccountEmailChangeMessage(String mailTo, String token) {
         var message = EmailChangeDTO.of(client, mailTo, token);
         rabbitTemplate.convertAndSend("", emailRoutingKey, message);
+    }
+
+    public void publishTopicMessage(String subject, String template, User user) {
+        var message = new TopicDTO(subject, template, client, user);
+        rabbitTemplate.convertAndSend("", topicRoutingKey, message);
     }
 
 }

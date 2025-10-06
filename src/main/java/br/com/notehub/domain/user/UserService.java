@@ -41,9 +41,11 @@ public interface UserService {
 
     void delete(UUID idFromToken, String password);
 
-    Page<User> findAll(Pageable pageable, String q);
-
     User getUser(String username);
+
+    List<User> getAllActiveUsers();
+
+    Page<User> findAll(Pageable pageable, String q);
 
     Page<User> getUserFollowing(Pageable pageable, String q, UUID idFromToken, String username);
 

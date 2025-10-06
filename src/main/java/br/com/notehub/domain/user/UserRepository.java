@@ -35,7 +35,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.followers LEFT JOIN FETCH u.following WHERE u.username = :username")
     Optional<User> findByUsernameWithFollowersAndFollowing(@Param("username") String username);
 
-    Page<User> findAllByActiveTrue(Pageable pageable);
+    List<User> findAllByActiveTrue();
 
     @Query("""
             SELECT u

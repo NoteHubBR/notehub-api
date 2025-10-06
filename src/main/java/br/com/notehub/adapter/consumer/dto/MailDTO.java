@@ -1,6 +1,6 @@
 package br.com.notehub.adapter.consumer.dto;
 
-public record EmailChangeDTO(
+public record MailDTO(
         String mailTo,
         String subject,
         String text
