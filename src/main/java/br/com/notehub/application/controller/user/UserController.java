@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -306,20 +307,44 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
+    @Operation(summary = "Add subscription", description = "Subscribe user to a given subscription topic.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Subscription linked successfully."),
+            @ApiResponse(responseCode = "400", description = "Invalid subscription value.", content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "403", description = "Invalid token.", content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "404", description = "User not found.", content = @Content(examples = {})),
+            @ApiResponse(responseCode = "500", description = "Internal server error.", content = @Content(examples = {}))
+    })
     @PostMapping("/subscriptions/{subscription}")
-    public ResponseEntity<Void> enableSubscription(
+    public ResponseEntity<Void> allowSubscription(
             @Parameter(hidden = true) @RequestHeader("Authorization") String accessToken,
-            @PathVariable("subscription") String subscription
+            @Parameter(
+                    description = "Subscription topic to enable",
+                    example = "Release",
+                    schema = @Schema(type = "string", allowableValues = {"Release", "Maintenance"})
+            ) @PathVariable("subscription") String subscription
     ) {
         UUID idFromToken = getSubject(accessToken);
         service.allowSubscription(idFromToken, subscription);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
+    @Operation(summary = "Remove subscription", description = "Unsubscribe the authenticated user from a given subscription topic.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Subscription unlinked successfully."),
+            @ApiResponse(responseCode = "400", description = "Invalid subscription value.", content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "403", description = "Invalid token.", content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "404", description = "User not found.", content = @Content(examples = {})),
+            @ApiResponse(responseCode = "500", description = "Internal server error.", content = @Content(examples = {}))
+    })
     @DeleteMapping("/subscriptions/{subscription}")
-    public ResponseEntity<Void> disableSubscription(
+    public ResponseEntity<Void> disallowSubscription(
             @Parameter(hidden = true) @RequestHeader("Authorization") String accessToken,
-            @PathVariable("subscription") String subscription
+            @Parameter(
+                    description = "Subscription topic to disable",
+                    example = "Release",
+                    schema = @Schema(type = "string", allowableValues = {"Release", "Maintenance"})
+            ) @PathVariable("subscription") String subscription
     ) {
         UUID idFromToken = getSubject(accessToken);
         service.disallowSubscription(idFromToken, subscription);
