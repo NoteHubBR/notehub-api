@@ -306,6 +306,26 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
+    @PostMapping("/subscriptions/{subscription}")
+    public ResponseEntity<Void> enableSubscription(
+            @Parameter(hidden = true) @RequestHeader("Authorization") String accessToken,
+            @PathVariable("subscription") String subscription
+    ) {
+        UUID idFromToken = getSubject(accessToken);
+        service.allowSubscription(idFromToken, subscription);
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
+    @DeleteMapping("/subscriptions/{subscription}")
+    public ResponseEntity<Void> disableSubscription(
+            @Parameter(hidden = true) @RequestHeader("Authorization") String accessToken,
+            @PathVariable("subscription") String subscription
+    ) {
+        UUID idFromToken = getSubject(accessToken);
+        service.disallowSubscription(idFromToken, subscription);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
     @Operation(summary = "Find users", description = "Retrieves a paginated list of all active users by username or display name.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Users retrieved successfully."),

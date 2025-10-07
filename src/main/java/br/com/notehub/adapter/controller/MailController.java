@@ -1,6 +1,7 @@
 package br.com.notehub.adapter.controller;
 
 import br.com.notehub.adapter.producer.MailProducer;
+import br.com.notehub.domain.user.Subscription;
 import br.com.notehub.domain.user.User;
 import br.com.notehub.domain.user.UserService;
 import br.com.notehub.infra.exception.CustomExceptions;
@@ -40,11 +41,13 @@ public class MailController {
     ) {
         validateSecret(request);
         for (User user : service.getAllActiveUsers())
-            producer.publishTopicMessage(
-                    "✨ Novidades",
-                    "release",
-                    user
-            );
+            if (user.wants(Subscription.RELEASE)) {
+                producer.publishTopicMessage(
+                        "Novidades",
+                        "release",
+                        user
+                );
+            }
     }
 
 }

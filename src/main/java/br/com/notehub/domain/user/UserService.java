@@ -35,6 +35,10 @@ public interface UserService {
 
     void changeMessage(UUID idFromToken, String message);
 
+    void allowSubscription(UUID idFromToken, String subscriptionStr);
+
+    void disallowSubscription(UUID idFromToken, String subscriptionStr);
+
     void follow(UUID idFromToken, String username);
 
     void unfollow(UUID idFromToken, String username);

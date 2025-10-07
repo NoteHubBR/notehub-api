@@ -254,4 +254,11 @@ public class ControllerAdvice {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errors.stream().map(CustomResponse::new).toList());
     }
 
+    @ExceptionHandler(CustomExceptions.SubscriptionException.class)
+    private ResponseEntity<List<CustomResponse>> handleSubscriptionException(CustomExceptions.SubscriptionException ex) {
+        List<FieldError> errors = new ArrayList<>();
+        errors.add(new FieldError("parameter", "subscription", ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors.stream().map(CustomResponse::new).toList());
+    }
+
 }

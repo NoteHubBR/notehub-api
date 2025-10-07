@@ -88,4 +88,10 @@ public class CustomExceptions {
         }
     }
 
+    public static class SubscriptionException extends BusinessException {
+        public SubscriptionException(String message) {
+            super(message);
+        }
+    }
+
 }
