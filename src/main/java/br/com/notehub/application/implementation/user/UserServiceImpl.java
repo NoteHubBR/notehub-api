@@ -6,6 +6,7 @@ import br.com.notehub.domain.history.UserHistoryService;
 import br.com.notehub.domain.note.NoteService;
 import br.com.notehub.domain.notification.NotificationService;
 import br.com.notehub.domain.token.TokenService;
+import br.com.notehub.domain.user.Subscription;
 import br.com.notehub.domain.user.User;
 import br.com.notehub.domain.user.UserRepository;
 import br.com.notehub.domain.user.UserService;
@@ -110,6 +111,14 @@ public class UserServiceImpl implements UserService {
         return following.getFollowers().contains(follower);
     }
 
+    private Subscription validateSubscription(String subscriptionStr) {
+        try {
+            return Subscription.from(subscriptionStr);
+        } catch (IllegalArgumentException e) {
+            throw new CustomExceptions.SubscriptionException("Inscrição inválida.");
+        }
+    }
+
     @Transactional
     @Override
     public User create(User user) {
@@ -201,6 +210,24 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
+    public void allowSubscription(UUID idFromToken, String subscriptionStr) {
+        Subscription subscription = validateSubscription(subscriptionStr);
+        User user = repository.findById(idFromToken).orElseThrow(EntityNotFoundException::new);
+        user.enable(subscription);
+        repository.save(user);
+    }
+
+    @Transactional
+    @Override
+    public void disallowSubscription(UUID idFromToken, String subscriptionStr) {
+        Subscription subscription = validateSubscription(subscriptionStr);
+        User user = repository.findById(idFromToken).orElseThrow(EntityNotFoundException::new);
+        user.disable(subscription);
+        repository.save(user);
+    }
+
+    @Transactional
+    @Override
     public void follow(UUID idFromToken, String username) {
         User follower = repository.findByIdWithFollowersAndFollowing(idFromToken).orElseThrow(EntityNotFoundException::new);
         User following = repository.findByUsernameWithFollowersAndFollowing(username).orElseThrow(EntityNotFoundException::new);
@@ -240,15 +267,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Page<User> findAll(Pageable pageable, String q) {
-        return repository.findAllActiveUsersByUsernameOrDisplayName(pageable, q);
-    }
-
-    @Override
     public User getUser(String username) {
         User user = repository.findByUsername(username).orElseThrow(EntityNotFoundException::new);
         validateActiveField(user.isActive());
         return user;
+    }
+
+    @Override
+    public List<User> getAllActiveUsers() {
+        return repository.findAllByActiveTrue();
+    }
+
+    @Override
+    public Page<User> findAll(Pageable pageable, String q) {
+        return repository.findAllActiveUsersByUsernameOrDisplayName(pageable, q);
     }
 
     @Transactional(readOnly = true)
@@ -277,6 +309,12 @@ public class UserServiceImpl implements UserService {
         User user = repository.findByUsername(username).orElseThrow(EntityNotFoundException::new);
         validateActiveField(user.isActive());
         return historian.getLastFiveUserDisplayName(user);
+    }
+
+    @Override
+    public Set<Subscription> getUserSubscriptions(UUID idFromToken) {
+        User user = repository.findById(idFromToken).orElseThrow(EntityNotFoundException::new);
+        return user.getSubscriptions();
     }
 
     @Transactional

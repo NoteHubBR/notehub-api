@@ -35,15 +35,21 @@ public interface UserService {
 
     void changeMessage(UUID idFromToken, String message);
 
+    void allowSubscription(UUID idFromToken, String subscriptionStr);
+
+    void disallowSubscription(UUID idFromToken, String subscriptionStr);
+
     void follow(UUID idFromToken, String username);
 
     void unfollow(UUID idFromToken, String username);
 
     void delete(UUID idFromToken, String password);
 
-    Page<User> findAll(Pageable pageable, String q);
-
     User getUser(String username);
+
+    List<User> getAllActiveUsers();
+
+    Page<User> findAll(Pageable pageable, String q);
 
     Page<User> getUserFollowing(Pageable pageable, String q, UUID idFromToken, String username);
 
@@ -52,6 +58,8 @@ public interface UserService {
     Set<String> getUserMutualConnections(UUID id);
 
     List<String> getUserDisplayNameHistory(String username);
+
+    Set<Subscription> getUserSubscriptions(UUID idFromToken);
 
     void cleanUsersWithExpiredActivationTime();
 

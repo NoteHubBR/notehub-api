@@ -40,7 +40,8 @@ public class SecurityConfig {
             "/api/v1/users", "/api/v1/users/**",
             "/api/v1/notes", "/api/v1/notes/**",
             "/api/v1/flames", "/api/v1/flames/**",
-            "/api/v1/replies", "/api/v1/replies/**"
+            "/api/v1/replies", "/api/v1/replies/**",
+            "/api/v1/mail", "/api/v1/mail/**"
     };
 
     private static final String[] PRIVATE_GET_ROUTES = {

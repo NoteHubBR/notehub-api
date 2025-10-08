@@ -10,6 +10,12 @@ public class CustomExceptions {
         }
     }
 
+    public static class InvalidSecretException extends BusinessException {
+        public InvalidSecretException() {
+            super("Segredo incorreto.");
+        }
+    }
+
     public static class MissingDeviceException extends BusinessException {
         public MissingDeviceException() {
             super(String.format("X-Device-Id faltando, use %s no lugar.", UUID.randomUUID()));
@@ -78,6 +84,12 @@ public class CustomExceptions {
 
     public static class UserBlockedException extends BusinessException {
         public UserBlockedException(String message) {
+            super(message);
+        }
+    }
+
+    public static class SubscriptionException extends BusinessException {
+        public SubscriptionException(String message) {
             super(message);
         }
     }

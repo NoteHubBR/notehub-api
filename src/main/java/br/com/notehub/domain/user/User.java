@@ -71,6 +71,12 @@ public class User implements UserDetails {
 
     private boolean active;
 
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "users_subscriptions", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "subscription")
+    @Convert(converter = SubscriptionConverter.class)
+    private Set<Subscription> subscriptions = new HashSet<>();
+
     @OneToMany(mappedBy = "user", orphanRemoval = true)
     private List<Token> tokens = new ArrayList<>();
 
@@ -112,34 +118,6 @@ public class User implements UserDetails {
     private Set<User> followers = new HashSet<>();
     private int followersCount = 0;
 
-    public User(String email, String username, String displayName, String password) {
-        this.host = Host.NOTEHUB;
-        this.email = email;
-        this.displayName = displayName;
-        this.username = username;
-        this.password = password;
-        this.active = false;
-    }
-
-    public User(String id, Host host, String email, String username, String displayName, String avatar) {
-        this.providerId = id;
-        this.host = host;
-        this.email = email;
-        this.username = username.toLowerCase();
-        this.displayName = displayName;
-        this.avatar = avatar;
-        this.active = true;
-    }
-
-    public User(String username, String displayName, String avatar, String banner, String message, boolean profilePrivate) {
-        this.username = username;
-        this.displayName = displayName;
-        this.avatar = avatar;
-        this.banner = banner;
-        this.message = message;
-        this.profilePrivate = profilePrivate;
-    }
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_BASIC"));
@@ -163,6 +141,48 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    public boolean wants(Subscription subscription) {
+        return subscriptions.contains(subscription);
+    }
+
+    public void enable(Subscription subscription) {
+        subscriptions.add(subscription);
+    }
+
+    public void disable(Subscription subscription) {
+        subscriptions.remove(subscription);
+    }
+
+    public User(String email, String username, String displayName, String password) {
+        this.host = Host.NOTEHUB;
+        this.email = email;
+        this.displayName = displayName;
+        this.username = username;
+        this.password = password;
+        this.active = false;
+        Collections.addAll(this.subscriptions, Subscription.MAINTENANCE, Subscription.RELEASE);
+    }
+
+    public User(String id, Host host, String email, String username, String displayName, String avatar) {
+        this.providerId = id;
+        this.host = host;
+        this.email = email;
+        this.username = username.toLowerCase();
+        this.displayName = displayName;
+        this.avatar = avatar;
+        this.active = true;
+        Collections.addAll(this.subscriptions, Subscription.MAINTENANCE, Subscription.RELEASE);
+    }
+
+    public User(String username, String displayName, String avatar, String banner, String message, boolean profilePrivate) {
+        this.username = username;
+        this.displayName = displayName;
+        this.avatar = avatar;
+        this.banner = banner;
+        this.message = message;
+        this.profilePrivate = profilePrivate;
     }
 
 }
