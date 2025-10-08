@@ -59,6 +59,8 @@ public interface UserService {
 
     List<String> getUserDisplayNameHistory(String username);
 
+    Set<Subscription> getUserSubscriptions(UUID idFromToken);
+
     void cleanUsersWithExpiredActivationTime();
 
 }

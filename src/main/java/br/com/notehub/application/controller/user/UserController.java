@@ -5,6 +5,7 @@ import br.com.notehub.application.dto.request.user.*;
 import br.com.notehub.application.dto.response.page.PageRES;
 import br.com.notehub.application.dto.response.user.CreateUserRES;
 import br.com.notehub.application.dto.response.user.DetailUserRES;
+import br.com.notehub.domain.user.Subscription;
 import br.com.notehub.domain.user.User;
 import br.com.notehub.domain.user.UserService;
 import br.com.notehub.infra.exception.CustomExceptions;
@@ -464,6 +465,21 @@ public class UserController {
             @PathVariable("username") String username
     ) {
         return ResponseEntity.status(HttpStatus.OK).body(service.getUserDisplayNameHistory(username));
+    }
+
+    @Operation(summary = "List user subscriptions", description = "Returns all active subscriptions associated with the authenticated user.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "List of subscriptions retrieved successfully."),
+            @ApiResponse(responseCode = "403", description = "Invalid token.", content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "404", description = "User not found.", content = @Content(examples = {})),
+            @ApiResponse(responseCode = "500", description = "Internal server error.", content = @Content(examples = {}))
+    })
+    @GetMapping("/subscriptions")
+    public ResponseEntity<Set<Subscription>> getSubscriptions(
+            @Parameter(hidden = true) @RequestHeader("Authorization") String accessToken
+    ) {
+        UUID idFromToken = getSubject(accessToken);
+        return ResponseEntity.status(HttpStatus.OK).body(service.getUserSubscriptions(idFromToken));
     }
 
 }

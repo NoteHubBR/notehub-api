@@ -311,6 +311,12 @@ public class UserServiceImpl implements UserService {
         return historian.getLastFiveUserDisplayName(user);
     }
 
+    @Override
+    public Set<Subscription> getUserSubscriptions(UUID idFromToken) {
+        User user = repository.findById(idFromToken).orElseThrow(EntityNotFoundException::new);
+        return user.getSubscriptions();
+    }
+
     @Transactional
     @Override
     public void cleanUsersWithExpiredActivationTime() {

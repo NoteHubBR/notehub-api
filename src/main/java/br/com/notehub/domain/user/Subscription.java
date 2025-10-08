@@ -6,8 +6,8 @@ import lombok.Getter;
 @Getter
 public enum Subscription {
 
-    RELEASE("Release"),
-    MAINTENANCE("Maintenance");
+    MAINTENANCE("Maintenance"),
+    RELEASE("Release");
 
     private final String subscription;
 
