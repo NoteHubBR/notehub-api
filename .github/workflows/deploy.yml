@@ -1,0 +1,51 @@
+name: Sync main to flyio-new-files
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Save fly.toml from deploy branch
+        run: |
+          git fetch origin flyio-new-files || echo "No deploy branch yet"
+          mkdir temp
+          if git ls-remote --exit-code origin flyio-new-files; then
+            git checkout origin/flyio-new-files -- fly.toml || echo "No fly.toml to copy"
+            cp fly.toml temp/ || echo "No fly.toml found to copy"
+          fi
+
+      - name: Create/overwrite flyio-new-files branch
+        run: |
+          git checkout -B flyio-new-files
+          git reset --hard main
+
+      - name: Restore fly.toml
+        run: |
+          if [ -f temp/fly.toml ]; then
+            cp temp/fly.toml fly.toml
+          fi
+
+      - name: Commit and push to flyio-new-files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Sync main -> flyio-new-files (keeping fly.toml)" || echo "No changes to commit"
+          git push -f origin flyio-new-files
