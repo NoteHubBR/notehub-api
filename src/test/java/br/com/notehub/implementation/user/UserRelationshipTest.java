@@ -38,44 +38,56 @@ public class UserRelationshipTest {
 
     private User follower;
     private User following;
-    private UUID followerId;
+
+    private User createUser(String email, String username) {
+        User u = new User(email, username, username.toUpperCase(), "123");
+        u.setId(UUID.randomUUID());
+        u.setActive(true);
+        return u;
+    }
+
+    private void mockfindByIdWithFollowersAndFollowing(User u) {
+        when(repository.findByIdWithFollowersAndFollowing(u.getId())).thenReturn(Optional.of(u));
+    }
+
+    private void mockfindByUsernameWithFollowersAndFollowing(User u) {
+        when(repository.findByUsernameWithFollowersAndFollowing(u.getUsername())).thenReturn(Optional.of(u));
+    }
 
     @BeforeEach
     void setup() {
-        follower = new User("follower@notehub.com.br", "follower", "Follower", "1234");
-        following = new User("following@notehub.com.br", "following", "Following", "1234");
-        followerId = UUID.randomUUID();
-        follower.setId(followerId);
+        follower = createUser("follower@notehub.com.br", "follower");
+        following = createUser("following@notehub.com.br", "following");
     }
 
     @Test
     void shouldFollowUserAndSendNotification_whenNotAlreadyFollowing() {
 
-        when(repository.findByIdWithFollowersAndFollowing(followerId)).thenReturn(Optional.of(follower));
-        when(repository.findByUsernameWithFollowersAndFollowing(following.getUsername())).thenReturn(Optional.of(following));
+        mockfindByIdWithFollowersAndFollowing(follower);
+        mockfindByUsernameWithFollowersAndFollowing(following);
 
-        service.follow(followerId, following.getUsername());
+        service.follow(follower.getId(), following.getUsername());
 
-        verify(repository, times(1)).findByIdWithFollowersAndFollowing(followerId);
-        verify(repository, times(1)).findByUsernameWithFollowersAndFollowing(following.getUsername());
-        verify(counter, times(1)).updateFollowersAndFollowingCount(eq(follower), eq(following), eq(true));
-        verify(notifier, times(1)).notify(eq(follower), eq(following), eq(follower), eq(MessageNotification.of(follower)));
+        verify(repository).findByIdWithFollowersAndFollowing(follower.getId());
+        verify(repository).findByUsernameWithFollowersAndFollowing(following.getUsername());
+        verify(counter).updateFollowersAndFollowingCount(eq(follower), eq(following), eq(true));
+        verify(notifier).notify(eq(follower), eq(following), eq(follower), eq(MessageNotification.of(follower)));
 
     }
 
     @Test
     void shouldUnfollowUserWithoutNotification_whenAlreadyFollowing() {
 
-        when(repository.findByIdWithFollowersAndFollowing(followerId)).thenReturn(Optional.of(follower));
-        when(repository.findByUsernameWithFollowersAndFollowing(following.getUsername())).thenReturn(Optional.of(following));
+        mockfindByIdWithFollowersAndFollowing(follower);
+        mockfindByUsernameWithFollowersAndFollowing(following);
 
         follower.getFollowing().add(following);
         following.getFollowers().add(follower);
-        service.unfollow(followerId, following.getUsername());
+        service.unfollow(follower.getId(), following.getUsername());
 
-        verify(repository, times(1)).findByIdWithFollowersAndFollowing(followerId);
-        verify(repository, times(1)).findByUsernameWithFollowersAndFollowing(following.getUsername());
-        verify(counter, times(1)).updateFollowersAndFollowingCount(eq(follower), eq(following), eq(false));
+        verify(repository).findByIdWithFollowersAndFollowing(follower.getId());
+        verify(repository).findByUsernameWithFollowersAndFollowing(following.getUsername());
+        verify(counter).updateFollowersAndFollowingCount(eq(follower), eq(following), eq(false));
         verify(notifier, never()).notify(any(), any(), any(), any());
 
     }
@@ -83,15 +95,15 @@ public class UserRelationshipTest {
     @Test
     void shouldThrowSelfFollowException_whenTryingToFollowSelf() {
 
-        when(repository.findByIdWithFollowersAndFollowing(followerId)).thenReturn(Optional.of(follower));
-        when(repository.findByUsernameWithFollowersAndFollowing(following.getUsername())).thenReturn(Optional.of(follower));
+        mockfindByIdWithFollowersAndFollowing(follower);
+        mockfindByUsernameWithFollowersAndFollowing(follower);
 
         assertThatThrownBy(() ->
-                service.follow(followerId, following.getUsername()))
+                service.follow(follower.getId(), follower.getUsername()))
                 .isInstanceOf(CustomExceptions.SelfFollowException.class);
 
-        verify(repository, times(1)).findByIdWithFollowersAndFollowing(followerId);
-        verify(repository, times(1)).findByUsernameWithFollowersAndFollowing(following.getUsername());
+        verify(repository).findByIdWithFollowersAndFollowing(follower.getId());
+        verify(repository).findByUsernameWithFollowersAndFollowing(follower.getUsername());
         verify(counter, never()).updateFollowersAndFollowingCount(any(), any(), any(Boolean.class));
         verify(notifier, never()).notify(any(), any(), any(), any());
 
@@ -100,18 +112,18 @@ public class UserRelationshipTest {
     @Test
     void shouldThrowAlreadyFollowingException_whenFollowingUserAgain() {
 
-        when(repository.findByIdWithFollowersAndFollowing(followerId)).thenReturn(Optional.of(follower));
-        when(repository.findByUsernameWithFollowersAndFollowing(following.getUsername())).thenReturn(Optional.of(following));
+        mockfindByIdWithFollowersAndFollowing(follower);
+        mockfindByUsernameWithFollowersAndFollowing(following);
 
         follower.getFollowing().add(following);
         following.getFollowers().add(follower);
 
         assertThatThrownBy(() ->
-                service.follow(followerId, following.getUsername()))
+                service.follow(follower.getId(), following.getUsername()))
                 .isInstanceOf(CustomExceptions.AlreadyFollowingException.class);
 
-        verify(repository, times(1)).findByIdWithFollowersAndFollowing(followerId);
-        verify(repository, times(1)).findByUsernameWithFollowersAndFollowing(following.getUsername());
+        verify(repository).findByIdWithFollowersAndFollowing(follower.getId());
+        verify(repository).findByUsernameWithFollowersAndFollowing(following.getUsername());
         verify(counter, never()).updateFollowersAndFollowingCount(any(), any(), any(Boolean.class));
         verify(notifier, never()).notify(any(), any(), any(), any());
 
@@ -120,15 +132,15 @@ public class UserRelationshipTest {
     @Test
     void shouldThrowNotFollowingException_whenUnfollowingUserNotFollowed() {
 
-        when(repository.findByIdWithFollowersAndFollowing(followerId)).thenReturn(Optional.of(follower));
-        when(repository.findByUsernameWithFollowersAndFollowing(following.getUsername())).thenReturn(Optional.of(following));
+        mockfindByIdWithFollowersAndFollowing(follower);
+        mockfindByUsernameWithFollowersAndFollowing(following);
 
         assertThatThrownBy(() ->
-                service.unfollow(followerId, following.getUsername()))
+                service.unfollow(follower.getId(), following.getUsername()))
                 .isInstanceOf(CustomExceptions.NotFollowingException.class);
 
-        verify(repository, times(1)).findByIdWithFollowersAndFollowing(followerId);
-        verify(repository, times(1)).findByUsernameWithFollowersAndFollowing(following.getUsername());
+        verify(repository).findByIdWithFollowersAndFollowing(follower.getId());
+        verify(repository).findByUsernameWithFollowersAndFollowing(following.getUsername());
         verify(counter, never()).updateFollowersAndFollowingCount(any(), any(), any(Boolean.class));
         verify(notifier, never()).notify(any(), any(), any(), any());
 

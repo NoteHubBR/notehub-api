@@ -19,8 +19,6 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,35 +40,50 @@ class UserCreationTest {
     private PasswordEncoder encoder;
 
     private User user;
-    private UUID id;
+
+    private User createUser(String email, String username) {
+        User u = new User(email, username, username.toUpperCase(), "123");
+        u.setId(UUID.randomUUID());
+        u.setActive(true);
+        return u;
+    }
+
+    private void mockExistsByEmail(User u, boolean condition) {
+        when(repository.existsByEmail(u.getEmail())).thenReturn(condition);
+    }
+
+    private void mockExistsByUsername(User u, boolean condition) {
+        when(repository.existsByUsername(u.getUsername())).thenReturn(condition);
+    }
+
+    private void mockSave(User u) {
+        when(repository.save(u)).thenReturn(u);
+    }
 
     @BeforeEach
     void setup() {
-        user = new User("tester@notehub.com.br", "tester", "Tester", "1234");
-        id = UUID.randomUUID();
-        user.setId(id);
-        user.setActive(true);
+        user = createUser("tester@notehub.com.br", "tester");
     }
 
     @Test
     void shouldEncodePasswordAndSaveUser_whenDataIsValid() {
 
-        when(repository.existsByEmail(anyString())).thenReturn(false);
-        when(repository.existsByUsername(anyString())).thenReturn(false);
-        when(encoder.encode(anyString())).thenReturn("encoded");
-        when(repository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
+        mockExistsByEmail(user, false);
+        mockExistsByUsername(user, false);
+        mockSave(user);
+        when(encoder.encode(user.getPassword())).thenReturn("encoded");
 
         User result = service.create(user);
 
-        verify(repository).existsByEmail("tester@notehub.com.br");
-        verify(repository).existsByUsername("tester");
-        verify(encoder).encode("1234");
-        verify(repository).save(any(User.class));
+        verify(repository).existsByEmail(user.getEmail());
+        verify(repository).existsByUsername(user.getUsername());
+        verify(encoder).encode("123");
+        verify(repository).save(user);
 
-        assertThat(result).isInstanceOf(User.class);
-        assertThat(result.getEmail()).isEqualTo("tester@notehub.com.br");
-        assertThat(result.getUsername()).isEqualTo("tester");
-        assertThat(result.getDisplayName()).isEqualTo("Tester");
+        assertThat(result).isEqualTo(user);
+        assertThat(result.getEmail()).isEqualTo(user.getEmail());
+        assertThat(result.getUsername()).isEqualTo(user.getUsername());
+        assertThat(result.getDisplayName()).isEqualTo(user.getDisplayName());
         assertThat(result.getPassword()).isEqualTo("encoded");
 
     }
@@ -78,48 +91,48 @@ class UserCreationTest {
     @Test
     void shouldThrowException_whenEmailAlreadyExists() {
 
-        when(repository.existsByEmail(anyString())).thenReturn(true);
-        when(repository.existsByUsername(anyString())).thenReturn(false);
+        mockExistsByEmail(user, true);
+        mockExistsByUsername(user, false);
 
         assertThatThrownBy(() -> service.create(user))
                 .isInstanceOf(DataIntegrityViolationException.class)
                 .hasMessage("email");
 
-        verify(repository, never()).save(any());
+        verify(repository, never()).save(user);
 
     }
 
     @Test
     void shouldThrowException_whenUsernameAlreadyExists() {
 
-        when(repository.existsByEmail(anyString())).thenReturn(false);
-        when(repository.existsByUsername(anyString())).thenReturn(true);
+        mockExistsByEmail(user, false);
+        mockExistsByUsername(user, true);
 
         assertThatThrownBy(() -> service.create(user))
                 .isInstanceOf(DataIntegrityViolationException.class)
                 .hasMessage("username");
 
-        verify(repository, never()).save(any());
+        verify(repository, never()).save(user);
 
     }
 
     @Test
     void shouldThrowException_whenEmailAndUsernameAlreadyExist() {
 
-        when(repository.existsByEmail(anyString())).thenReturn(true);
-        when(repository.existsByUsername(anyString())).thenReturn(true);
+        mockExistsByEmail(user, true);
+        mockExistsByUsername(user, true);
 
         assertThatThrownBy(() -> service.create(user))
                 .isInstanceOf(DataIntegrityViolationException.class)
                 .hasMessage("both");
 
-        verify(repository, never()).save(any());
+        verify(repository, never()).save(user);
 
     }
 
     @Test
     void shouldReturnToken_whenGeneratingActivationToken() {
-        when(tokenService.generateActivationToken(any(User.class))).thenReturn("token");
+        when(tokenService.generateActivationToken(user)).thenReturn("token");
         String token = service.generateActivationToken(user);
         assertThat(token).isEqualTo("token");
     }
@@ -127,17 +140,16 @@ class UserCreationTest {
     @Test
     void shouldSetActiveTrueAndLogHistory_whenActivatingUser() {
 
-        User inactiveUser = new User("inactive@notehub.com.br", "inactive", "Inactive", "1234");
-        inactiveUser.setId(id);
-        inactiveUser.setActive(false);
+        User inactive = createUser("inactive@notehub.com.br", "inactive");
+        inactive.setActive(false);
 
-        when(repository.findById(id)).thenReturn(Optional.of(inactiveUser));
-        when(repository.save(any(User.class))).thenReturn(inactiveUser);
+        when(repository.findById(inactive.getId())).thenReturn(Optional.of(inactive));
+        mockSave(inactive);
 
-        service.activate(id);
+        service.activate(inactive.getId());
 
-        verify(repository).save(any(User.class));
-        verify(historian).setHistory(any(), eq("active"), eq("false"), eq("true"));
+        verify(repository).save(inactive);
+        verify(historian).setHistory(inactive, "active", "false", "true");
 
     }
 

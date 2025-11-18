@@ -35,42 +35,49 @@ public class UserDeletionTest {
     private PasswordEncoder encoder;
 
     private User user;
-    private UUID id;
+
+    private void mockFindById(User u) {
+        when(repository.findById(u.getId())).thenReturn(Optional.of(u));
+    }
+
+    private void mockMatches(boolean condition) {
+        when(encoder.matches(anyString(), anyString())).thenReturn(condition);
+    }
 
     @BeforeEach
     void setup() {
-        user = new User("tester@notehub.com.br", "tester", "Tester", "1234");
-        id = UUID.randomUUID();
-        user.setId(id);
+        user = new User("tester@notehub.com.br", "tester", "TESTER", "123");
+        user.setId(UUID.randomUUID());
+        user.setActive(true);
     }
 
     @Test
     void shouldDeleteUser_whenPasswordMatches() {
 
-        when(repository.findById(id)).thenReturn(Optional.of(user));
-        when(encoder.matches(anyString(), anyString())).thenReturn(true);
+        mockFindById(user);
+        mockMatches(true);
 
-        service.delete(id, user.getPassword());
+        service.delete(user.getId(), user.getPassword());
 
-        verify(repository, times(1)).findById(id);
-        verify(repository, times(1)).delete(user);
-        verify(noteService, times(1)).deleteAllUserHiddenNotes(eq(user));
+        verify(repository).findById(user.getId());
+        verify(repository).delete(user);
+        verify(noteService).deleteAllUserHiddenNotes(user);
 
     }
 
     @Test
     void shouldThrowBadCredentialsException_whenPasswordDoesNotMatch() {
 
-        when(repository.findById(id)).thenReturn(Optional.of(user));
-        when(encoder.matches(anyString(), anyString())).thenReturn(false);
+        mockFindById(user);
+        mockMatches(false);
 
         assertThatThrownBy(() ->
-                service.delete(id, user.getPassword()))
+                service.delete(user.getId(), user.getPassword()))
                 .isInstanceOf(BadCredentialsException.class);
 
-        verify(repository, times(1)).findById(id);
+        verify(repository).findById(user.getId());
         verify(repository, never()).delete(user);
-        verify(noteService, never()).deleteAllUserHiddenNotes(eq(user));
+        verify(noteService, never()).deleteAllUserHiddenNotes(user);
 
     }
 

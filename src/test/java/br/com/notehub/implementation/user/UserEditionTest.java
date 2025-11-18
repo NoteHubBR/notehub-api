@@ -32,62 +32,68 @@ public class UserEditionTest {
     private UserHistoryService historian;
 
     private User user;
-    private UUID id;
+
+    private User updateUser(String name, boolean profilePrivate) {
+        return new User(name, name.toUpperCase(), null, null, null, profilePrivate);
+    }
+
+    private void mockFindById(User user) {
+        when(repository.findById(user.getId())).thenReturn(Optional.of(user));
+    }
 
     @BeforeEach
     void setup() {
-        user = new User("tester@notehub.com.br", "tester", "Tester", "1234");
-        id = UUID.randomUUID();
-        user.setId(id);
+        user = new User("tester@notehub.com.br", "tester", "TESTER", "123");
+        user.setId(UUID.randomUUID());
         user.setActive(true);
     }
 
     @Test
     void shouldSaveHistoryAndPersistChanges_whenDataIsModified() {
 
-        User updated = new User("updated", "Updated", null, null, null, true);
+        User updated = updateUser("updated", true);
 
-        when(repository.findById(id)).thenReturn(Optional.of(user));
+        mockFindById(user);
 
-        assertThat(updated).isEqualTo(service.edit(id, updated));
+        assertThat(updated).isEqualTo(service.edit(user.getId(), updated));
 
-        verify(repository, times(6)).findById(id);
-        verify(repository, times(3)).save(any(User.class));
-        verify(historian).setHistory(any(User.class), eq("username"), eq("tester"), eq("updated"));
-        verify(historian).setHistory(any(User.class), eq("display_name"), eq("Tester"), eq("Updated"));
-        verify(historian).setHistory(any(User.class), eq("profile_private"), eq("false"), eq("true"));
+        verify(repository, times(6)).findById(user.getId());
+        verify(repository, times(3)).save(user);
+        verify(historian).setHistory(user, "username", "tester", "updated");
+        verify(historian).setHistory(user, "display_name", "TESTER", "UPDATED");
+        verify(historian).setHistory(user, "profile_private", "false", "true");
 
     }
 
     @Test
     void shouldSkipSaveAndHistory_whenUserDataIsUnchanged() {
 
-        User updated = new User("tester", "Tester", null, null, null, false);
+        User updated = updateUser("tester", false);
 
-        when(repository.findById(id)).thenReturn(Optional.of(user));
+        mockFindById(user);
 
-        assertThat(updated).isEqualTo(service.edit(id, updated));
+        assertThat(updated).isEqualTo(service.edit(user.getId(), updated));
 
-        verify(repository, times(6)).findById(id);
-        verify(repository, never()).save(any(User.class));
+        verify(repository, times(6)).findById(user.getId());
+        verify(repository, never()).save(user);
         verify(historian, never()).setHistory(any(), any(), any(), any());
 
     }
 
     @Test
-    void shouldThrowException_whenUsernameAlreadyExists() {
+    void shouldThrowDataIntegrityViolationException_whenUsernameAlreadyExists() {
 
-        User updated = new User("tester", "Updated", null, null, null, false);
+        User updated = updateUser("tester", false);
 
-        when(repository.findByUsername("tester")).thenReturn(Optional.of(user));
-        when(repository.findById(id)).thenReturn(Optional.of(updated));
+        mockFindById(user);
+        when(repository.findByUsername("tester")).thenReturn(Optional.of(updated));
 
-        assertThatThrownBy(() -> service.edit(id, updated))
+        assertThatThrownBy(() -> service.edit(user.getId(), updated))
                 .isInstanceOf(DataIntegrityViolationException.class)
                 .hasMessage("username");
 
-        verify(repository, times(1)).findById(id);
-        verify(repository, never()).save(any(User.class));
+        verify(repository).findById(user.getId());
+        verify(repository, never()).save(user);
         verify(historian, never()).setHistory(any(), any(), any(), any());
 
     }
