@@ -27,7 +27,8 @@ public class SecurityConfig {
     };
 
     private static final String[] PUBLIC_POST_ROUTES = {
-            "/api/v1/users/register", "/api/v1/auth/**"
+            "/api/v1/users/register", "/api/v1/auth/**",
+            "/payment/stripe/sponsorship/webhook"
     };
 
     private static final String[] PUBLIC_DELETE_ROUTES = {
@@ -36,6 +37,7 @@ public class SecurityConfig {
 
     private static final String[] PUBLIC_GET_ROUTES = {
             "/", "/docs",
+            "/payment/stripe/sponsorship/verify/**",
             "/api/v1/auth/refresh",
             "/api/v1/users", "/api/v1/users/**",
             "/api/v1/notes", "/api/v1/notes/**",

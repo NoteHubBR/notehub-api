@@ -144,6 +144,12 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
+    public void promote(UUID idFromToken) {
+        changeField(idFromToken, "sponsor", User::isSponsor, user -> user.setSponsor(true));
+    }
+
+    @Transactional
+    @Override
     public void changePassword(String email, String newPassword) {
         User entity = repository.findByEmail(email).orElseThrow(EntityNotFoundException::new);
         String password = validatePassword(entity.getPassword(), newPassword);

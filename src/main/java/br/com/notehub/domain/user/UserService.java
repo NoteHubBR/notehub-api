@@ -17,6 +17,8 @@ public interface UserService {
 
     void activate(UUID idFromToken);
 
+    void promote(UUID idFromToken);
+
     void changePassword(String email, String newPassword);
 
     void changeEmail(String oldEmail, String newEmail);
