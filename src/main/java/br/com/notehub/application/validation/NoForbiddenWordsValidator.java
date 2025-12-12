@@ -17,6 +17,7 @@ public class NoForbiddenWordsValidator implements ConstraintValidator<NoForbidde
             "null", "undefined", "admin", "user", "guest",
             "toe", "terms", "termos", "policies", "policy", "cookies", "cookie", "privacy", "legal", "legals", "language", "idioma",
             "signup", "signin", "recover", "sent", "activate", "search", "settings", "new", "help", "changelog", "dashboard",
+            "sponsorship", "success",
             "crf", "crfla", "crflamengo", "flamengo", "fla", "tjf", "t.j.f", "jovemfla", "jovem.fla", "jovem_fla",
             "ffc", "flufc", "fluminensefc", "fluminese", "flu", "tyf", "t.y.f", "youngflu", "young.flu", "young_flu",
             "tcp", "t.c.p", "tcpuro",
