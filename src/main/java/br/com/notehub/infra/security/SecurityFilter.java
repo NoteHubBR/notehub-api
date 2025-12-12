@@ -48,7 +48,7 @@ public class SecurityFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String accessToken = getToken(request);
-        if (request.getServletPath().contains("/payment/stripe/sponsorship/webhook")) {
+        if (request.getServletPath().contains("/api/v1/payment/stripe/sponsorship/webhook")) {
             filterChain.doFilter(request, response);
             return;
         }
