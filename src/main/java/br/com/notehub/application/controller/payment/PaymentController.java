@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @CrossOrigin(origins = {"https://notehub.com.br"})
-@RequestMapping("/payment")
+@RequestMapping("/api/v1/payment")
 @Tag(name = "Payment Controller", description = "Endpoints for managing payments")
 @RequiredArgsConstructor
 public class PaymentController {
