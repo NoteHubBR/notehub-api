@@ -39,11 +39,12 @@ public class StripeService {
         throw new AccessDeniedException("Usuário sem permissão.");
     }
 
-    public SponsorshipRES sponsorshipCheckout(String idFromToken, String currency, Long amount) {
+    public SponsorshipRES sponsorshipCheckout(String idFromToken, String locale, String currency, Long amount) {
 
         Stripe.apiKey = secret;
 
         try {
+
             var productData = SessionCreateParams.LineItem.PriceData.ProductData.builder()
                     .setName(SPONSORSHIP_NAME)
                     .build();
@@ -61,8 +62,9 @@ public class StripeService {
 
             var params = SessionCreateParams.builder()
                     .setMode(SessionCreateParams.Mode.PAYMENT)
+                    .setLocale(SessionCreateParams.Locale.valueOf(locale))
                     .setSuccessUrl(String.format("%s/sponsorship/success?session_id={CHECKOUT_SESSION_ID}", client))
-                    .setCancelUrl(String.format("%s/sponsorship/cancel", client))
+                    .setCancelUrl(String.format("%s/sponsorship", client))
                     .addLineItem(lineItem)
                     .putMetadata("purchaseType", "sponsorship")
                     .putMetadata("uId", idFromToken)
@@ -80,6 +82,7 @@ public class StripeService {
         } catch (StripeException e) {
             throw new CustomExceptions.CustomStripeException(e);
         }
+
     }
 
     public SponsorshipStatusRES verifySession(String sessionId, String uIdFromToken) {
@@ -92,6 +95,8 @@ public class StripeService {
                     session.getId(),
                     session.getPaymentStatus(),
                     session.getStatus(),
+                    session.getLocale(),
+                    session.getCurrency(),
                     session.getAmountTotal()
             );
         } catch (StripeException e) {

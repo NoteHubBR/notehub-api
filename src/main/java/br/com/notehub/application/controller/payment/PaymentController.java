@@ -55,7 +55,7 @@ public class PaymentController {
             @Valid @RequestBody SponsorshipREQ dto
     ) {
         String idFromToken = getSubject(accessToken);
-        SponsorshipRES res = stripeService.sponsorshipCheckout(idFromToken, dto.currency(), dto.amount());
+        SponsorshipRES res = stripeService.sponsorshipCheckout(idFromToken, dto.locale(), dto.currency(), dto.amount());
         return ResponseEntity.status(HttpStatus.OK).body(res);
     }
 

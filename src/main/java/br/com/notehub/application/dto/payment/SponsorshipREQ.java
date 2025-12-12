@@ -7,6 +7,9 @@ import jakarta.validation.constraints.NotNull;
 public record SponsorshipREQ(
 
         @NotBlank(message = "Não pode ser vazia.")
+        String locale,
+
+        @NotBlank(message = "Não pode ser vazia.")
         String currency,
 
         @NotNull(message = "Não pode ser nulo.")
