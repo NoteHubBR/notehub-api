@@ -3,6 +3,7 @@ package br.com.notehub.infra.exception;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
+import com.stripe.exception.StripeException;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -37,6 +38,13 @@ public class ControllerAdvice {
         List<FieldError> errors = ex.getFieldErrors();
         List<CustomResponse> response = errors.stream().map(CustomResponse::new).toList();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(CustomExceptions.CustomStripeException.class)
+    private ResponseEntity<List<CustomResponse>> handleStripeException(CustomExceptions.CustomStripeException ex) {
+        List<FieldError> errors = new ArrayList<>();
+        errors.add(new FieldError("Payment", "Payment", ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors.stream().map(CustomResponse::new).toList());
     }
 
     @ExceptionHandler(CustomExceptions.InvalidSecretException.class)

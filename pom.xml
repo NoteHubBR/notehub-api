@@ -10,7 +10,7 @@
     </parent>
     <groupId>br.com.notehub</groupId>
     <artifactId>NoteHub</artifactId>
-    <version>1.7.0</version>
+    <version>2.0.0</version>
     <name>NoteHub</name>
     <description>https://notehub.com.br</description>
     <url/>
@@ -118,6 +118,11 @@
             <artifactId>mockito-core</artifactId>
             <version>5.20.0</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.stripe</groupId>
+            <artifactId>stripe-java</artifactId>
+            <version>31.0.0</version>
         </dependency>
     </dependencies>
     <build>

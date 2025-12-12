@@ -1,5 +1,7 @@
 package br.com.notehub.infra.exception;
 
+import com.stripe.exception.StripeException;
+
 import java.util.UUID;
 
 public class CustomExceptions {
@@ -8,6 +10,22 @@ public class CustomExceptions {
         public BusinessException(String message) {
             super(message);
         }
+    }
+
+    public static class CustomStripeException extends BusinessException {
+
+        private static String customizeStripeExceptionMessage(StripeException e) {
+            String code = e.getCode();
+            String message = e.getMessage();
+            if ("amount_too_small".equals(code)) return "Minimum value not reached.";
+            if (message.contains("currency")) return "Currency not available.";
+            return "Error while processing payment. Please, try again later or contact support.";
+        }
+
+        public CustomStripeException(StripeException e) {
+            super(customizeStripeExceptionMessage(e));
+        }
+
     }
 
     public static class InvalidSecretException extends BusinessException {
