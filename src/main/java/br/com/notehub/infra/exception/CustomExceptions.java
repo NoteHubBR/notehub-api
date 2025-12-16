@@ -1,6 +1,7 @@
 package br.com.notehub.infra.exception;
 
 import com.stripe.exception.StripeException;
+import lombok.Getter;
 
 import java.util.UUID;
 
@@ -110,6 +111,18 @@ public class CustomExceptions {
         public SubscriptionException(String message) {
             super(message);
         }
+    }
+
+    @Getter
+    public static class GifNotAllowedException extends BusinessException {
+
+        private final String field;
+
+        public GifNotAllowedException(String field, String message) {
+            super(message);
+            this.field = field;
+        }
+
     }
 
 }
