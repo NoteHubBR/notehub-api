@@ -3,7 +3,6 @@ package br.com.notehub.infra.exception;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
-import com.stripe.exception.StripeException;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -24,6 +23,8 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 import java.util.ArrayList;
 import java.util.List;
 
+import static br.com.notehub.infra.exception.CustomExceptions.*;
+
 @RestControllerAdvice
 public class ControllerAdvice {
 
@@ -40,43 +41,43 @@ public class ControllerAdvice {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
-    @ExceptionHandler(CustomExceptions.CustomStripeException.class)
-    private ResponseEntity<List<CustomResponse>> handleStripeException(CustomExceptions.CustomStripeException ex) {
+    @ExceptionHandler(CustomStripeException.class)
+    private ResponseEntity<List<CustomResponse>> handleStripeException(CustomStripeException ex) {
         List<FieldError> errors = new ArrayList<>();
         errors.add(new FieldError("Payment", "Payment", ex.getMessage()));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors.stream().map(CustomResponse::new).toList());
     }
 
-    @ExceptionHandler(CustomExceptions.InvalidSecretException.class)
-    private ResponseEntity<List<CustomResponse>> handleInvalidSecretException(CustomExceptions.InvalidSecretException ex) {
+    @ExceptionHandler(InvalidSecretException.class)
+    private ResponseEntity<List<CustomResponse>> handleInvalidSecretException(InvalidSecretException ex) {
         List<FieldError> errors = new ArrayList<>();
         errors.add(new FieldError("Headers", "Headers", ex.getMessage()));
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errors.stream().map(CustomResponse::new).toList());
     }
 
-    @ExceptionHandler(CustomExceptions.MissingDeviceException.class)
-    private ResponseEntity<List<CustomResponse>> handleMissingDeviceException(CustomExceptions.MissingDeviceException ex) {
+    @ExceptionHandler(MissingDeviceException.class)
+    private ResponseEntity<List<CustomResponse>> handleMissingDeviceException(MissingDeviceException ex) {
         List<FieldError> errors = new ArrayList<>();
         errors.add(new FieldError("Headers", "Headers", ex.getMessage()));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors.stream().map(CustomResponse::new).toList());
     }
 
-    @ExceptionHandler(CustomExceptions.InvalidDeviceException.class)
-    private ResponseEntity<List<CustomResponse>> handleInvalidDeviceException(CustomExceptions.InvalidDeviceException ex) {
+    @ExceptionHandler(InvalidDeviceException.class)
+    private ResponseEntity<List<CustomResponse>> handleInvalidDeviceException(InvalidDeviceException ex) {
         List<FieldError> errors = new ArrayList<>();
         errors.add(new FieldError("Headers", "Headers", ex.getMessage()));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors.stream().map(CustomResponse::new).toList());
     }
 
-    @ExceptionHandler(CustomExceptions.MissingRefreshToken.class)
-    private ResponseEntity<List<CustomResponse>> handleMissingRefreshTokenException(CustomExceptions.MissingRefreshToken ex) {
+    @ExceptionHandler(MissingRefreshToken.class)
+    private ResponseEntity<List<CustomResponse>> handleMissingRefreshTokenException(MissingRefreshToken ex) {
         List<FieldError> errors = new ArrayList<>();
         errors.add(new FieldError("Headers", "Headers", ex.getMessage()));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors.stream().map(CustomResponse::new).toList());
     }
 
-    @ExceptionHandler(CustomExceptions.InvalidRefreshTokenException.class)
-    private ResponseEntity<List<CustomResponse>> handleInvalidRefreshTokenException(CustomExceptions.InvalidRefreshTokenException ex) {
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    private ResponseEntity<List<CustomResponse>> handleInvalidRefreshTokenException(InvalidRefreshTokenException ex) {
         List<FieldError> errors = new ArrayList<>();
         errors.add(new FieldError("Headers", "Headers", ex.getMessage()));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors.stream().map(CustomResponse::new).toList());
@@ -176,8 +177,8 @@ public class ControllerAdvice {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errors.stream().map(CustomResponse::new).toList());
     }
 
-    @ExceptionHandler(CustomExceptions.UserBlockedException.class)
-    private ResponseEntity<List<CustomResponse>> handleUserBlockedException(CustomExceptions.UserBlockedException ex) {
+    @ExceptionHandler(UserBlockedException.class)
+    private ResponseEntity<List<CustomResponse>> handleUserBlockedException(UserBlockedException ex) {
         List<FieldError> errors = new ArrayList<>();
         return switch (ex.getMessage()) {
             case "avatar" -> {
@@ -213,60 +214,66 @@ public class ControllerAdvice {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errors.stream().map(CustomResponse::new).toList());
     }
 
-    @ExceptionHandler(CustomExceptions.ScopeNotAllowedException.class)
-    private ResponseEntity<List<CustomResponse>> handleScopeNotAllowedException(CustomExceptions.ScopeNotAllowedException ex) {
+    @ExceptionHandler(ScopeNotAllowedException.class)
+    private ResponseEntity<List<CustomResponse>> handleScopeNotAllowedException(ScopeNotAllowedException ex) {
         List<FieldError> errors = new ArrayList<>();
         errors.add(new FieldError("token", "scope", ex.getMessage()));
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errors.stream().map(CustomResponse::new).toList());
     }
 
-    @ExceptionHandler(CustomExceptions.SamePasswordException.class)
-    private ResponseEntity<List<CustomResponse>> handleSamePasswordException(CustomExceptions.SamePasswordException ex) {
+    @ExceptionHandler(SamePasswordException.class)
+    private ResponseEntity<List<CustomResponse>> handleSamePasswordException(SamePasswordException ex) {
         List<FieldError> errors = new ArrayList<>();
         errors.add(new FieldError("user", "password", ex.getMessage()));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors.stream().map(CustomResponse::new).toList());
     }
 
-    @ExceptionHandler(CustomExceptions.SameEmailExpection.class)
-    private ResponseEntity<List<CustomResponse>> handleSameEmailExpection(CustomExceptions.SameEmailExpection ex) {
+    @ExceptionHandler(SameEmailExpection.class)
+    private ResponseEntity<List<CustomResponse>> handleSameEmailExpection(SameEmailExpection ex) {
         List<FieldError> errors = new ArrayList<>();
         errors.add(new FieldError("user", "email", ex.getMessage()));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors.stream().map(CustomResponse::new).toList());
     }
 
-    @ExceptionHandler(CustomExceptions.SelfFollowException.class)
-    private ResponseEntity<List<CustomResponse>> handleSelfFollowException(CustomExceptions.SelfFollowException ex) {
+    @ExceptionHandler(SelfFollowException.class)
+    private ResponseEntity<List<CustomResponse>> handleSelfFollowException(SelfFollowException ex) {
         List<FieldError> errors = new ArrayList<>();
         errors.add(new FieldError("user", "user", ex.getMessage()));
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errors.stream().map(CustomResponse::new).toList());
     }
 
-    @ExceptionHandler(CustomExceptions.AlreadyFollowingException.class)
-    private ResponseEntity<List<CustomResponse>> handleAlreadyFollowingException(CustomExceptions.AlreadyFollowingException ex) {
+    @ExceptionHandler(AlreadyFollowingException.class)
+    private ResponseEntity<List<CustomResponse>> handleAlreadyFollowingException(AlreadyFollowingException ex) {
         List<FieldError> errors = new ArrayList<>();
         errors.add(new FieldError("user", "user", ex.getMessage()));
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errors.stream().map(CustomResponse::new).toList());
     }
 
-    @ExceptionHandler(CustomExceptions.NotFollowingException.class)
-    private ResponseEntity<List<CustomResponse>> handleNotFollowingException(CustomExceptions.NotFollowingException ex) {
+    @ExceptionHandler(NotFollowingException.class)
+    private ResponseEntity<List<CustomResponse>> handleNotFollowingException(NotFollowingException ex) {
         List<FieldError> errors = new ArrayList<>();
         errors.add(new FieldError("user", "user", ex.getMessage()));
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errors.stream().map(CustomResponse::new).toList());
     }
 
-    @ExceptionHandler(CustomExceptions.HostNotAllowedException.class)
-    private ResponseEntity<List<CustomResponse>> handleHostNotAllowedException(CustomExceptions.HostNotAllowedException ex) {
+    @ExceptionHandler(HostNotAllowedException.class)
+    private ResponseEntity<List<CustomResponse>> handleHostNotAllowedException(HostNotAllowedException ex) {
         List<FieldError> errors = new ArrayList<>();
         errors.add(new FieldError("user", "host", ex.getMessage()));
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errors.stream().map(CustomResponse::new).toList());
     }
 
-    @ExceptionHandler(CustomExceptions.SubscriptionException.class)
-    private ResponseEntity<List<CustomResponse>> handleSubscriptionException(CustomExceptions.SubscriptionException ex) {
+    @ExceptionHandler(SubscriptionException.class)
+    private ResponseEntity<List<CustomResponse>> handleSubscriptionException(SubscriptionException ex) {
         List<FieldError> errors = new ArrayList<>();
         errors.add(new FieldError("parameter", "subscription", ex.getMessage()));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors.stream().map(CustomResponse::new).toList());
+    }
+
+    @ExceptionHandler(GifNotAllowedException.class)
+    private ResponseEntity<List<CustomResponse>> handleForbiddenImageFormatException(GifNotAllowedException ex) {
+        FieldError error = new FieldError("user", ex.getField(), ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(List.of(new CustomResponse(error)));
     }
 
 }

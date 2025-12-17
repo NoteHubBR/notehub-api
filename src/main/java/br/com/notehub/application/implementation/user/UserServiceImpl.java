@@ -10,7 +10,6 @@ import br.com.notehub.domain.user.Subscription;
 import br.com.notehub.domain.user.User;
 import br.com.notehub.domain.user.UserRepository;
 import br.com.notehub.domain.user.UserService;
-import br.com.notehub.infra.exception.CustomExceptions;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +33,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static br.com.notehub.infra.exception.CustomExceptions.*;
+
 @Component
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
@@ -46,6 +47,12 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder encoder;
     private final Counter counter;
 
+    private void validateGif(User user, String img, String field) {
+        if (img == null || !img.endsWith(".gif")) return;
+        if (field.equals("banner")) throw new GifNotAllowedException("banner", "GIFs são proibidos como banner.");
+        if (!user.isSponsor()) throw new GifNotAllowedException("avatar", "GIFs apenas para patrocinadores.");
+    }
+
     @SneakyThrows
     private <T> void changeField(UUID idFromToken, String field, Function<User, T> getter, Consumer<User> setter) {
         User user = repository.findById(idFromToken).orElseThrow(EntityNotFoundException::new);
@@ -53,19 +60,20 @@ public class UserServiceImpl implements UserService {
         setter.accept(user);
         T newValue = getter.apply(user);
         if (Objects.equals(oldValue, newValue)) return;
-        if (user.isBlocked() && (field.equals("avatar") || field.equals("banner"))) throw new CustomExceptions.UserBlockedException(field);
+        if (user.isBlocked() && (field.equals("avatar") || field.equals("banner"))) throw new UserBlockedException(field);
+        if (field.equals("avatar") || field.equals("banner")) validateGif(user, (String) newValue, field);
         repository.save(user);
         historian.setHistory(user, field, String.valueOf(oldValue), String.valueOf(newValue));
     }
 
     private String validatePassword(String oldPassword, String newPassword) {
-        if (encoder.matches(newPassword, oldPassword)) throw new CustomExceptions.SamePasswordException();
+        if (encoder.matches(newPassword, oldPassword)) throw new SamePasswordException();
         return encoder.encode(newPassword);
     }
 
     private void validateEmail(String oldEmail, String newEmail) {
         repository.findByEmail(newEmail).ifPresent(user -> {
-            if (Objects.equals(oldEmail, newEmail)) throw new CustomExceptions.SameEmailExpection();
+            if (Objects.equals(oldEmail, newEmail)) throw new SameEmailExpection();
             throw new DataIntegrityViolationException("email");
         });
     }
@@ -106,7 +114,7 @@ public class UserServiceImpl implements UserService {
 
     private boolean isFollowing(User follower, User following) {
         if (Objects.equals(follower.getId(), following.getId())) {
-            throw new CustomExceptions.SelfFollowException();
+            throw new SelfFollowException();
         }
         return following.getFollowers().contains(follower);
     }
@@ -115,7 +123,7 @@ public class UserServiceImpl implements UserService {
         try {
             return Subscription.from(subscriptionStr);
         } catch (IllegalArgumentException e) {
-            throw new CustomExceptions.SubscriptionException("Inscrição inválida.");
+            throw new SubscriptionException("Inscrição inválida.");
         }
     }
 
@@ -237,7 +245,7 @@ public class UserServiceImpl implements UserService {
     public void follow(UUID idFromToken, String username) {
         User follower = repository.findByIdWithFollowersAndFollowing(idFromToken).orElseThrow(EntityNotFoundException::new);
         User following = repository.findByUsernameWithFollowersAndFollowing(username).orElseThrow(EntityNotFoundException::new);
-        if (isFollowing(follower, following)) throw new CustomExceptions.AlreadyFollowingException();
+        if (isFollowing(follower, following)) throw new AlreadyFollowingException();
         counter.updateFollowersAndFollowingCount(follower, following, true);
         notifier.notify(follower, following, follower, MessageNotification.of(follower));
     }
@@ -247,7 +255,7 @@ public class UserServiceImpl implements UserService {
     public void unfollow(UUID idFromToken, String username) {
         User follower = repository.findByIdWithFollowersAndFollowing(idFromToken).orElseThrow(EntityNotFoundException::new);
         User following = repository.findByUsernameWithFollowersAndFollowing(username).orElseThrow(EntityNotFoundException::new);
-        if (!isFollowing(follower, following)) throw new CustomExceptions.NotFollowingException();
+        if (!isFollowing(follower, following)) throw new NotFollowingException();
         counter.updateFollowersAndFollowingCount(follower, following, false);
     }
 
