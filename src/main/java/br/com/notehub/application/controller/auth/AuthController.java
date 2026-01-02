@@ -25,7 +25,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@CrossOrigin(origins = {"https://notehub.com.br"})
 @RequestMapping("/api/v1/auth")
 @Tag(name = "Auth Controller", description = "Endpoints for authentication and authorization")
 @RequiredArgsConstructor

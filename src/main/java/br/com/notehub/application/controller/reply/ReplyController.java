@@ -26,7 +26,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@CrossOrigin(origins = {"https://notehub.com.br"})
 @RequestMapping("/api/v1/notes/comments")
 @SecurityRequirement(name = "bearer-key")
 @Tag(name = "Reply Controller", description = "Endpoints for managing replies")
