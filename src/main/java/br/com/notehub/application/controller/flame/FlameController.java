@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@CrossOrigin(origins = {"https://notehub.com.br"})
 @RequestMapping("/api/v1/flames")
 @SecurityRequirement(name = "bearer-key")
 @Tag(name = "Flame Controller", description = "Endpoints for managing user flames")

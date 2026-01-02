@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@CrossOrigin(origins = {"https://notehub.com.br"})
 @RequestMapping("/api/v1/notes")
 @SecurityRequirement(name = "bearer-key")
 @Tag(name = "Note Controller", description = "Endpoints for managing notes")
