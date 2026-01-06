@@ -8,6 +8,6 @@ RUN ./mvnw clean install
 
 FROM eclipse-temurin:21-jdk-alpine
 
-COPY --from=build ./target/NoteHub-2.0.1.jar app.jar
+COPY --from=build ./target/NoteHub-2.0.2.jar app.jar
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
