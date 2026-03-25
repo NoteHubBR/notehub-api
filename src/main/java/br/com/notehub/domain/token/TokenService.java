@@ -26,7 +26,7 @@ public interface TokenService {
 
     String validateToken(String accessToken);
 
-    AuthRES auth(HttpServletRequest request, String username, String password) throws BadCredentialsException;
+    AuthRES auth(HttpServletRequest request, String identifier, String password) throws BadCredentialsException;
 
     AuthRES authWithGoogleAcc(HttpServletRequest request, String token);
 

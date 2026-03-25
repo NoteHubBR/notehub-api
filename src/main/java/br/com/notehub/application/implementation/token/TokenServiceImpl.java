@@ -189,9 +189,12 @@ public class TokenServiceImpl implements TokenService {
 
     @Transactional
     @Override
-    public AuthRES auth(HttpServletRequest request, String username, String password) throws BadCredentialsException {
+    public AuthRES auth(HttpServletRequest request, String identifier, String password) throws BadCredentialsException {
 
-        User user = userRepository.findByUsername(username.toLowerCase()).orElseThrow(() -> new BadCredentialsException("username"));
+        User user = (identifier.contains("@")
+                ? userRepository.findByEmail(identifier)
+                : userRepository.findByUsername(identifier))
+                .orElseThrow(() -> new BadCredentialsException("identifier"));
         if (!user.isActive()) throw new DisabledException("Email não confirmado");
 
         boolean matches = encoder.matches(password, user.getPassword());

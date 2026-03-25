@@ -34,10 +34,10 @@ public class AuthController {
     private final UserService userService;
     private final MailProducer producer;
 
-    @Operation(summary = "Login user", description = "Authenticates a user with username and password.")
+    @Operation(summary = "Authenticate User", description = "Authenticates a user using an account identifier and password.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User authenticated successfully."),
-            @ApiResponse(responseCode = "401", description = "Invalid password.", content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "401", description = "Invalid identifier or password.", content = @Content(mediaType = "application/json")),
             @ApiResponse(responseCode = "400", description = "Missing or invalid X-Device-Id.", content = @Content(mediaType = "application/json")),
             @ApiResponse(responseCode = "403", description = "Email not confirmed.", content = @Content(mediaType = "application/json")),
             @ApiResponse(responseCode = "404", description = "User not found.", content = @Content(examples = {})),
@@ -49,7 +49,7 @@ public class AuthController {
             HttpServletRequest request,
             @Valid @RequestBody AuthREQ dto
     ) {
-        AuthRES token = service.auth(request, dto.username(), dto.password());
+        AuthRES token = service.auth(request, dto.identifier(), dto.password());
         return ResponseEntity.status(HttpStatus.OK).body(token);
     }
 

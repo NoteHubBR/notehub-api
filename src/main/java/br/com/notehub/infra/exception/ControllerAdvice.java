@@ -144,8 +144,8 @@ public class ControllerAdvice {
     private ResponseEntity<List<CustomResponse>> handleBadCredentialsException(BadCredentialsException ex) {
         List<FieldError> errors = new ArrayList<>();
         return switch (ex.getMessage()) {
-            case "username" -> {
-                errors.add(new FieldError("user", "username", "Nome não existe."));
+            case "identifier" -> {
+                errors.add(new FieldError("user", "identifier", "Identificador não existe."));
                 yield ResponseEntity.status(HttpStatus.NOT_FOUND).body(errors.stream().map(CustomResponse::new).toList());
             }
             case "password" -> {
