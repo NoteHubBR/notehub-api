@@ -1,4 +1,4 @@
-## NoteHub versão alpha (backend)
+## NoteHub versão beta (backend)
 
 #### NoteHub é um projeto open-source que fornece uma API REST escrita em Java + Spring Boot para um "Bloco de Notas Social". A ideia é oferecer uma base escalável e extensível para criar, compartilhar e processar notas, com autenticação JWT, persistência em PostgreSQL e processamento assíncrono via RabbitMQ. O projeto foi estruturado para ser simples de entender e fácil de contribuir — perfeito para colaboradores que queiram se desenvolver em um contexto real.
 
@@ -11,8 +11,8 @@
 </div>
 <br>
 <div align="center">
-  <a href="https://github.com/notehubbr/notehub-api/releases/tag/v2.0.2">
-    <img width="100px" height="25px" src="https://img.shields.io/badge/notehub-2.0.2-7c3aed">
+  <a href="https://github.com/notehubbr/notehub-api/releases/tag/v2.0.3">
+    <img width="100px" height="25px" src="https://img.shields.io/badge/notehub-2.0.3-7c3aed">
   </a>
 </div>
 
