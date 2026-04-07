@@ -50,7 +50,7 @@ public class UserServiceImpl implements UserService {
     private void validateGif(User user, String img, String field) {
         if (img == null || !img.endsWith(".gif")) return;
         if (field.equals("banner")) throw new GifNotAllowedException("banner", "GIFs são proibidos como banner.");
-        if (!user.isSponsor()) throw new GifNotAllowedException("avatar", "GIFs apenas para patrocinadores.");
+        if (!user.isDev() && !user.isSponsor()) throw new GifNotAllowedException("avatar", "GIFs apenas para patrocinadores.");
     }
 
     @SneakyThrows
