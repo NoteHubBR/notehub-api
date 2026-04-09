@@ -12,6 +12,7 @@ public record CreateUserRES(
         String display_name,
         Host host,
         boolean profile_private,
+        boolean dev,
         boolean sponsor,
         boolean blocked,
         Long score
@@ -24,6 +25,7 @@ public record CreateUserRES(
                 user.getDisplayName(),
                 user.getHost(),
                 user.isProfilePrivate(),
+                user.isDev(),
                 user.isSponsor(),
                 user.isBlocked(),
                 user.getScore()

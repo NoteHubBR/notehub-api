@@ -61,6 +61,8 @@ public class User implements UserDetails {
 
     private boolean profilePrivate = false;
 
+    private boolean dev = false;
+
     private boolean sponsor = false;
 
     private boolean blocked = false;

@@ -15,6 +15,7 @@ public record PersonalUserRES(
         String message,
         Host host,
         boolean profile_private,
+        boolean dev,
         boolean sponsor,
         boolean blocked,
         Long score,
