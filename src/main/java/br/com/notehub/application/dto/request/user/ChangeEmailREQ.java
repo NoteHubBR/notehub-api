@@ -9,6 +9,8 @@ public record ChangeEmailREQ(
                 regexp = "(?i)[a-z0-9!#$%&'*+=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?",
                 message = "Email inválido"
         )
-        String email
+        String email,
+        boolean disconnectAll,
+        boolean keepCurrentSession
 ) {
 }
