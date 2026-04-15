@@ -36,6 +36,8 @@ public interface TokenService {
 
     void logout(HttpServletRequest request);
 
+    void disconnectAll(HttpServletRequest request, boolean keepCurrentSession, String email);
+
     void cleanExpiredTokens();
 
 }

@@ -260,6 +260,14 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
+    public void disconnectAll(HttpServletRequest request, boolean keepCurrentSession, String email) {
+        List<Token> connections = repository.findAllByUserEmail(email);
+        UUID device = validateDevice(request);
+        if (keepCurrentSession) connections = connections.stream().filter(t -> !t.getDevice().equals(device)).toList();
+        repository.deleteAll(connections);
+    }
+
+    @Override
     public void cleanExpiredTokens() {
         List<Token> expiredTokens = repository.findExpiredTokens(Instant.now());
         repository.deleteAll(expiredTokens);

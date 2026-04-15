@@ -5,6 +5,7 @@ import br.com.notehub.application.dto.request.user.*;
 import br.com.notehub.application.dto.response.page.PageRES;
 import br.com.notehub.application.dto.response.user.CreateUserRES;
 import br.com.notehub.application.dto.response.user.DetailUserRES;
+import br.com.notehub.domain.token.TokenService;
 import br.com.notehub.domain.user.Subscription;
 import br.com.notehub.domain.user.User;
 import br.com.notehub.domain.user.UserService;
@@ -20,6 +21,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -48,6 +50,7 @@ public class UserController {
     private String client;
 
     private final UserService service;
+    private final TokenService tokenService;
     private final MailProducer producer;
 
     private UUID getSubject(String bearerToken) {
@@ -94,25 +97,33 @@ public class UserController {
     @Operation(summary = "Reset user password", description = "Resets the user's password using the provided token.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "User's password updated successfully."),
-            @ApiResponse(responseCode = "400", description = "Invalid or same password."),
+            @ApiResponse(responseCode = "400", description = """
+                    - `INVALID_DEVICE_ID`: Missing or invalid X-Device-Id
+                    - `SAME_PASSWORD`: Invalid password or new password is identical to the current one
+                    """),
             @ApiResponse(responseCode = "403", description = "Invalid token."),
             @ApiResponse(responseCode = "404", description = "User not found."),
             @ApiResponse(responseCode = "500", description = "Internal server error.")
     })
     @PatchMapping("/change-password")
     public ResponseEntity<Void> patchPassword(
+            HttpServletRequest request,
             @Parameter(hidden = true) @RequestHeader("Authorization") String token,
             @Valid @RequestBody ChangePasswordREQ dto
     ) {
         String emailFromToken = getSubject(token, "password");
         service.changePassword(emailFromToken, dto.password());
+        if (dto.disconnectAll()) tokenService.disconnectAll(request, dto.keepCurrentSession(), emailFromToken);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
     @Operation(summary = "Update email", description = "Updates the user's email address.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Email updated successfully."),
-            @ApiResponse(responseCode = "400", description = "Invalid or same email."),
+            @ApiResponse(responseCode = "400", description = """
+                    - `INVALID_DEVICE_ID`: Missing or invalid X-Device-Id
+                    - `SAME_EMAIL`: Invalid email or new email is identical to the current one
+                    """),
             @ApiResponse(responseCode = "403", description = "Invalid token."),
             @ApiResponse(responseCode = "404", description = "User not found."),
             @ApiResponse(responseCode = "406", description = "Email already exists."),
@@ -120,11 +131,13 @@ public class UserController {
     })
     @PatchMapping("/change-email")
     public ResponseEntity<Void> patchEmail(
+            HttpServletRequest request,
             @Parameter(hidden = true) @RequestHeader("Authorization") String token,
             @Valid @RequestBody ChangeEmailREQ dto
     ) {
         String emailFromToken = getSubject(token, "email");
         service.changeEmail(emailFromToken, dto.email());
+        if (dto.disconnectAll()) tokenService.disconnectAll(request, dto.keepCurrentSession(), emailFromToken);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
