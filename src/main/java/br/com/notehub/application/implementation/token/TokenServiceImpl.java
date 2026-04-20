@@ -2,6 +2,7 @@ package br.com.notehub.application.implementation.token;
 
 import br.com.notehub.application.dto.oauth.OAuthResponse;
 import br.com.notehub.application.dto.response.token.AuthRES;
+import br.com.notehub.application.geoip.GeoIpService;
 import br.com.notehub.application.oauth.OAuthFacade;
 import br.com.notehub.domain.token.Token;
 import br.com.notehub.domain.token.TokenRepository;
@@ -43,6 +44,7 @@ public class TokenServiceImpl implements TokenService {
     private String secret;
 
     private final OAuthFacade oAuthFacade;
+    private final GeoIpService geoService;
     private final TokenRepository repository;
     private final UserRepository userRepository;
     private final PasswordEncoder encoder;
@@ -69,12 +71,29 @@ public class TokenServiceImpl implements TokenService {
         }
     }
 
+    private boolean isValidIp(String ip) {
+        return ip != null && !ip.isBlank() && !"unknown".equalsIgnoreCase(ip);
+    }
+
+    private String getClientIp(HttpServletRequest request) {
+        String ip;
+        ip = request.getHeader("Fly-Client-IP");
+        if (isValidIp(ip)) return ip;
+        ip = request.getHeader("X-Forwarded-For");
+        if (isValidIp(ip)) return ip.split(",")[0].trim();
+        ip = request.getHeader("X-Real-IP");
+        if (isValidIp(ip)) return ip;
+        return request.getRemoteAddr();
+    }
+
     private Token generateRefreshToken(HttpServletRequest request, User user) {
-        String ip = request.getRemoteAddr();
+        String ip = getClientIp(request);
         String agent = request.getHeader("User-Agent");
         UUID device = validateDevice(request);
         Instant expiresAt = getExpirationTime("refresh");
-        return new Token(user, ip, agent, device, expiresAt);
+        Token token = new Token(user, ip, agent, device, expiresAt);
+        geoService.enrichToken(token, agent, ip);
+        return token;
     }
 
     private void validateInternalHost(Host host) {
@@ -256,6 +275,20 @@ public class TokenServiceImpl implements TokenService {
     public void logout(HttpServletRequest request) {
         UUID rToken = validateRefreshToken(request);
         Token token = repository.findById(rToken).orElseThrow(EntityNotFoundException::new);
+        repository.delete(token);
+    }
+
+    @Override
+    public List<Token> getAllSessions(UUID uId, String password) {
+        User user = userRepository.findById(uId).orElseThrow(EntityNotFoundException::new);
+        boolean matches = encoder.matches(password, user.getPassword());
+        if (!matches) throw new BadCredentialsException("password");
+        return repository.findAllByUserId(uId);
+    }
+
+    @Override
+    public void disconnect(UUID id) {
+        Token token = repository.findById(id).orElseThrow(EntityNotFoundException::new);
         repository.delete(token);
     }
 

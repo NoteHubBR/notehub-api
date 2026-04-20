@@ -1,13 +1,13 @@
 package br.com.notehub.application.controller.auth;
 
 import br.com.notehub.adapter.producer.MailProducer;
-import br.com.notehub.application.dto.request.token.AuthChangeREQ;
-import br.com.notehub.application.dto.request.token.AuthREQ;
-import br.com.notehub.application.dto.request.token.OAuth2GoogleREQ;
-import br.com.notehub.application.dto.request.token.OAuthGitHubREQ;
+import br.com.notehub.application.dto.request.token.*;
 import br.com.notehub.application.dto.response.token.AuthRES;
+import br.com.notehub.application.dto.response.token.SessionRES;
+import br.com.notehub.domain.token.Token;
 import br.com.notehub.domain.token.TokenService;
 import br.com.notehub.domain.user.UserService;
+import com.auth0.jwt.JWT;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -23,6 +23,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -170,6 +173,44 @@ public class AuthController {
         String jwt = service.generateEmailChangeToken(dto.email());
         producer.publishAccountEmailChangeMessage(dto.email(), jwt);
         return ResponseEntity.status(HttpStatus.ACCEPTED).build();
+    }
+
+    @Operation(
+            summary = "Fetch all account sessions",
+            description = "Get a full description of all connections across differents devices.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Sessions retrieves successfully."),
+            @ApiResponse(responseCode = "400", description = "Invalid token.", content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "403", description = "Null token.", content = @Content(examples = {})),
+            @ApiResponse(responseCode = "500", description = "Internal server error.", content = @Content(examples = {}))
+    })
+    @PostMapping("/sessions")
+    public ResponseEntity<List<SessionRES>> findAllSessions(
+            @Parameter(hidden = true) @RequestHeader("Authorization") String accessToken,
+            @Valid @RequestBody AuthSessionsREQ dto
+    ) {
+        UUID idFromToken = accessToken != null
+                ? UUID.fromString(JWT.decode(accessToken.replace("Bearer ", "")).getSubject())
+                : null;
+        List<Token> tokens = service.getAllSessions(idFromToken, dto.password());
+        return ResponseEntity.status(HttpStatus.OK).body(tokens.stream().map(SessionRES::new).toList());
+    }
+
+    @Operation(
+            summary = "Disconnect session",
+            description = "Disconnect a session via token id. The session ID is only exposed after a password-verified fetch via POST /sessions, ensuring that only authenticated users with knowledge of their own sessions can perform this action."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Session disconnected successfully."),
+            @ApiResponse(responseCode = "404", description = "Session not found.", content = @Content(examples = {})),
+            @ApiResponse(responseCode = "500", description = "Internal server error.", content = @Content(examples = {}))
+    })
+    @DeleteMapping("/session/{id}")
+    public ResponseEntity<Void> disconnectSession(
+            @PathVariable("id") UUID id
+    ) {
+        service.disconnect(id);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
 }
