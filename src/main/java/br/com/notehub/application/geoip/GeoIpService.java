@@ -29,7 +29,7 @@ public class GeoIpService {
     }
 
     private String normalizeDeviceClass(String deviceClass) {
-        if (deviceClass == null) return "Unknown";
+        if (deviceClass == null) return "unknown";
         return switch (deviceClass.toLowerCase()) {
             case "phone", "mobile" -> "Mobile";
             case "tablet" -> "Tablet";
@@ -38,7 +38,7 @@ public class GeoIpService {
     }
 
     private String sanitize(String value) {
-        if (value == null || value.isBlank() || value.equals("??") || value.equalsIgnoreCase("unknown")) return "Unknown";
+        if (value == null || value.isBlank() || value.equals("??") || value.equalsIgnoreCase("unknown")) return "unknown";
         return value;
     }
 

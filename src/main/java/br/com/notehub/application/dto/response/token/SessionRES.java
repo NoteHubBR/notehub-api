@@ -2,12 +2,15 @@ package br.com.notehub.application.dto.response.token;
 
 import br.com.notehub.domain.token.Token;
 
-import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.util.UUID;
 
 public record SessionRES(
         UUID id,
-        Instant createdAt,
+        UUID device,
+        String createdAt,
         String ip,
         String deviceType,
         String deviceBrand,
@@ -21,7 +24,8 @@ public record SessionRES(
     public SessionRES(Token token) {
         this(
                 token.getId(),
-                token.getCreatedAt(),
+                token.getDevice(),
+                token.getCreatedAt().atZone(ZoneId.of("America/Sao_Paulo")).format(DateTimeFormatter.ofPattern("d/M/yy HH:mm", Locale.of("pt-BR"))),
                 token.getIp(),
                 token.getDeviceType(),
                 token.getDeviceBrand(),
