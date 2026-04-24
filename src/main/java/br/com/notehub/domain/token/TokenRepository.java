@@ -15,6 +15,8 @@ public interface TokenRepository extends JpaRepository<Token, UUID> {
 
     Optional<Token> findByDevice(UUID id);
 
+    List<Token> findAllByUserId(UUID id);
+
     List<Token> findAllByUserEmail(String email);
 
     @Query("SELECT t FROM Token t WHERE t.expiresAt < :now")

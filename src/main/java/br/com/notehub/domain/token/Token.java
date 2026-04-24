@@ -31,12 +31,17 @@ public class Token {
     private User user;
 
     private Instant createdAt = LocalDateTime.now().toInstant(ZoneOffset.of("-03:00"));
-
     private String ip;
-
     private UUID device;
-
+    private String deviceType;
+    private String deviceBrand;
+    private String deviceModel;
+    private String os;
+    private String browser;
     private String agent;
+    private String country;
+    private String region;
+    private String city;
 
     private Instant expiresAt;
 

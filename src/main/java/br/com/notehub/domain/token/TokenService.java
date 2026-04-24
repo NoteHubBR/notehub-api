@@ -1,6 +1,7 @@
 package br.com.notehub.domain.token;
 
 import br.com.notehub.application.dto.response.token.AuthRES;
+import br.com.notehub.application.dto.response.token.SessionRES;
 import br.com.notehub.domain.user.User;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -8,6 +9,8 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
 
 @Service
 public interface TokenService {
@@ -35,6 +38,10 @@ public interface TokenService {
     AuthRES recreateToken(HttpServletRequest request) throws TokenExpiredException;
 
     void logout(HttpServletRequest request);
+
+    List<Token> getAllSessions(UUID uId, String password);
+
+    void disconnect(UUID id);
 
     void disconnectAll(HttpServletRequest request, boolean keepCurrentSession, String email);
 

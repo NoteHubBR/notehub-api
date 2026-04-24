@@ -10,4 +10,4 @@ FROM eclipse-temurin:21-jdk-alpine
 
 COPY --from=build ./target/NoteHub-2.1.jar app.jar
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Xms256m", "-Xmx768m", "-jar", "app.jar"]
