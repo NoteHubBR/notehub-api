@@ -5,10 +5,11 @@ import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.model.CityResponse;
 import nl.basjes.parse.useragent.UserAgent;
 import nl.basjes.parse.useragent.UserAgentAnalyzer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.InetAddress;
 
 @Service
@@ -17,15 +18,12 @@ public class GeoIpService {
     private final UserAgentAnalyzer uaAnalyzer;
     private final DatabaseReader geoReader;
 
-    public GeoIpService() throws IOException {
+    public GeoIpService(@Value("${geoip.database}") String geoipDbPath) throws IOException {
         this.uaAnalyzer = UserAgentAnalyzer.newBuilder()
                 .hideMatcherLoadStats()
                 .withCache(1000)
                 .build();
-        InputStream stream = getClass()
-                .getClassLoader()
-                .getResourceAsStream("geoip/GeoLite2-City.mmdb");
-        this.geoReader = new DatabaseReader.Builder(stream).build();
+        this.geoReader = new DatabaseReader.Builder(new File(geoipDbPath)).build();
     }
 
     private String normalizeDeviceClass(String deviceClass) {
