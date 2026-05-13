@@ -3,8 +3,8 @@ primary_region = 'gru'
 
 [build]
   [build.args]
-    MMAI = "$MMAI"
-    MMLK = "$MMLK"
+    MMAI = "MMAI"
+    MMLK = "MMLK"
 
 [deploy]
   strategy = 'rolling'
@@ -16,6 +16,15 @@ primary_region = 'gru'
   auto_start_machines = false
   min_machines_running = 1
   processes = ['app']
+
+[[http_service.checks]]
+  grace_period = "10s"
+  interval = "15s"
+  method = "GET"
+  path = "/api/v1/health"
+  port = 8080
+  timeout = "5s"
+  tls_skip_verify = false
 
 [[vm]]
   memory = '1gb'
