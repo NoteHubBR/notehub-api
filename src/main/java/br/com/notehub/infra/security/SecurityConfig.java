@@ -29,6 +29,7 @@ public class SecurityConfig {
     private static final String[] PUBLIC_ALL_ROUTES = {
             "/h2-console", "/h2-console/**",
             "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**",
+            "/api/v1/health",
     };
 
     private static final String[] PUBLIC_POST_ROUTES = {
