@@ -2,6 +2,7 @@ package br.com.notehub.application.implementation.user;
 
 import br.com.notehub.application.counter.Counter;
 import br.com.notehub.application.dto.notification.MessageNotification;
+import br.com.notehub.domain.feed.FeedService;
 import br.com.notehub.domain.history.UserHistoryService;
 import br.com.notehub.domain.note.NoteService;
 import br.com.notehub.domain.notification.NotificationService;
@@ -46,6 +47,7 @@ public class UserServiceImpl implements UserService {
     private final NoteService noteService;
     private final PasswordEncoder encoder;
     private final Counter counter;
+    private final FeedService feeder;
 
     private void validateGif(User user, String img, String field) {
         if (img == null || !img.endsWith(".gif")) return;
@@ -248,6 +250,7 @@ public class UserServiceImpl implements UserService {
         if (isFollowing(follower, following)) throw new AlreadyFollowingException();
         counter.updateFollowersAndFollowingCount(follower, following, true);
         notifier.notify(follower, following, follower, MessageNotification.of(follower));
+        feeder.onUserFollowed(follower, following);
     }
 
     @Transactional

@@ -4,6 +4,7 @@ import br.com.notehub.application.counter.Counter;
 import br.com.notehub.application.dto.notification.MessageNotification;
 import br.com.notehub.application.dto.response.flame.DetailFlameRES;
 import br.com.notehub.application.dto.response.page.PageRES;
+import br.com.notehub.domain.feed.FeedService;
 import br.com.notehub.domain.flame.Flame;
 import br.com.notehub.domain.flame.FlameRepository;
 import br.com.notehub.domain.flame.FlameService;
@@ -34,6 +35,7 @@ public class FlameServiceImpl implements FlameService {
     private final FlameRepository repository;
     private final NotificationService notifier;
     private final Counter counter;
+    private final FeedService feeder;
 
     private void validateBidirectionalFollowAccess(@Nullable User requesting, User requested) {
         if (!requested.isProfilePrivate()) return;
@@ -55,6 +57,7 @@ public class FlameServiceImpl implements FlameService {
         Flame flame = repository.save(new Flame(user, note));
         counter.updateFlamesCount(note, true);
         notifier.notify(flame.getUser(), note.getUser(), note.getUser(), MessageNotification.of(flame));
+        feeder.onNoteFlamed(flame);
         return new DetailFlameRES(flame);
     }
 

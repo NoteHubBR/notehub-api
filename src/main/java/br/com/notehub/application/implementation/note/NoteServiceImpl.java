@@ -5,6 +5,7 @@ import br.com.notehub.application.dto.request.note.CreateNoteREQ;
 import br.com.notehub.application.dto.response.note.DetailNoteRES;
 import br.com.notehub.application.dto.response.note.LowDetailNoteRES;
 import br.com.notehub.application.dto.response.page.PageRES;
+import br.com.notehub.domain.feed.FeedService;
 import br.com.notehub.domain.note.Note;
 import br.com.notehub.domain.note.NoteRepository;
 import br.com.notehub.domain.note.NoteService;
@@ -34,6 +35,7 @@ public class NoteServiceImpl implements NoteService {
     private final TagRepository tagRepository;
     private final NoteRepository repository;
     private final Counter counter;
+    private final FeedService feeder;
 
     private void validateAccess(@Nullable UUID idFromToken, UUID idFromRequested) {
         if (idFromToken == null) throw new AccessDeniedException("Usuário sem permissão.");
@@ -92,6 +94,7 @@ public class NoteServiceImpl implements NoteService {
         Note note = mapToNote(idFromToken, req);
         repository.save(note);
         counter.updateNotesCount(note.getUser(), true);
+        feeder.onNoteCreated(note);
         return new LowDetailNoteRES(note);
     }
 
