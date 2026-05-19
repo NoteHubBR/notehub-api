@@ -74,7 +74,7 @@ public class CommentServiceImpl implements CommentService {
         repository.save(comment);
         counter.updateCommentsCount(comment.getNote(), true);
         notifier.notify(comment.getUser(), comment.getNote().getUser(), comment.getNote().getUser(), MessageNotification.of(comment));
-        feeder.onNoteCommented(comment);
+        feeder.onNoteCommented(comment.getId());
         return new CreateCommentRES(comment);
     }
 
@@ -97,6 +97,7 @@ public class CommentServiceImpl implements CommentService {
         validateAccess(idFromToken, comment.getUser().getId());
         repository.delete(comment);
         counter.updateCommentsCount(comment.getNote(), false);
+        feeder.onCommentDeleted(comment.getId());
     }
 
     @Transactional(readOnly = true)

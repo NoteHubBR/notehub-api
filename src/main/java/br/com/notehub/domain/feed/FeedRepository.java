@@ -3,6 +3,7 @@ package br.com.notehub.domain.feed;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -23,7 +24,42 @@ public interface FeedRepository extends JpaRepository<Feed, UUID> {
             """)
     Page<Feed> findFeedForUser(Pageable pageable, @Param("recipientId") UUID recipientId);
 
+    @Modifying
+    @Query("""
+            DELETE FROM Feed f
+            WHERE f.actor.id = :actorId
+            AND f.recipient.id NOT IN (
+                SELECT f1.id FROM User actor
+                JOIN actor.followers f1
+                JOIN actor.following f2
+                WHERE actor.id = :actorId
+                AND f1.id = f2.id
+            )
+            """)
+    void deleteEventsForNonMutualFollowers(@Param("actorId") UUID actorId);
+
+    @Modifying
+    @Query("""
+            DELETE FROM Feed f
+            WHERE f.actor.id = :followerId
+            AND f.related.id = :followingId
+            AND f.event = 'User_Followed'
+            """)
+    void deleteFollowEvent(@Param("followerId") UUID followerId, @Param("followingId") UUID followingId);
+
+    @Modifying
+    @Query("""
+            DELETE FROM Feed f
+            WHERE f.actor.id = :actorId
+            AND f.recipient.id = :recipientId
+            """)
+    void deleteAllEventsByActorForRecipient(@Param("actorId") UUID actorId, @Param("recipientId") UUID recipientId);
+
     void deleteAllByNoteId(UUID noteId);
+
+    void deleteAllByFlameId(UUID flameId);
+
+    void deleteAllByCommentId(UUID commentId);
 
     void deleteAllByActorId(UUID actorId);
 

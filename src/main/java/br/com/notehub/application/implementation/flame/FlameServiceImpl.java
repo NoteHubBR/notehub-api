@@ -57,7 +57,7 @@ public class FlameServiceImpl implements FlameService {
         Flame flame = repository.save(new Flame(user, note));
         counter.updateFlamesCount(note, true);
         notifier.notify(flame.getUser(), note.getUser(), note.getUser(), MessageNotification.of(flame));
-        feeder.onNoteFlamed(flame);
+        feeder.onNoteFlamed(flame.getId());
         return new DetailFlameRES(flame);
     }
 
@@ -66,6 +66,7 @@ public class FlameServiceImpl implements FlameService {
     public void deflame(UUID userIdFromToken, UUID noteIdFromPath) {
         Flame flame = repository.findByUserIdAndNoteId(userIdFromToken, noteIdFromPath).orElseThrow(EntityNotFoundException::new);
         counter.updateFlamesCount(flame.getNote(), false);
+        feeder.onNoteUnflamed(flame.getId());
         repository.delete(flame);
     }
 

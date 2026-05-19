@@ -191,6 +191,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public void changeProfileVisibility(UUID idFromToken) {
         changeField(idFromToken, "profile_private", User::isProfilePrivate, user -> user.setProfilePrivate(!user.isProfilePrivate()));
+        User actor = repository.findById(idFromToken).orElseThrow(EntityNotFoundException::new);
+        feeder.onProfilePrivacyChanged(actor.getId(), actor.isProfilePrivate());
     }
 
     @Transactional
@@ -250,7 +252,7 @@ public class UserServiceImpl implements UserService {
         if (isFollowing(follower, following)) throw new AlreadyFollowingException();
         counter.updateFollowersAndFollowingCount(follower, following, true);
         notifier.notify(follower, following, follower, MessageNotification.of(follower));
-        feeder.onUserFollowed(follower, following);
+        feeder.onUserFollowed(follower.getId(), following.getId());
     }
 
     @Transactional
@@ -260,6 +262,7 @@ public class UserServiceImpl implements UserService {
         User following = repository.findByUsernameWithFollowersAndFollowing(username).orElseThrow(EntityNotFoundException::new);
         if (!isFollowing(follower, following)) throw new NotFollowingException();
         counter.updateFollowersAndFollowingCount(follower, following, false);
+        feeder.onUserUnfollowed(follower.getId(), following.getId());
     }
 
     @Transactional

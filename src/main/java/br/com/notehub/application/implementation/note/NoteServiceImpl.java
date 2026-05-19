@@ -94,7 +94,7 @@ public class NoteServiceImpl implements NoteService {
         Note note = mapToNote(idFromToken, req);
         repository.save(note);
         counter.updateNotesCount(note.getUser(), true);
-        feeder.onNoteCreated(note);
+        feeder.onNoteCreated(note.getId());
         return new LowDetailNoteRES(note);
     }
 
@@ -140,6 +140,7 @@ public class NoteServiceImpl implements NoteService {
     @Override
     public void changeHidden(UUID idFromToken, UUID idFromPath) {
         changeField(idFromToken, idFromPath, note -> note.setHidden(!note.isHidden()));
+        feeder.onNoteHidden(idFromPath);
     }
 
     @Transactional
@@ -161,6 +162,7 @@ public class NoteServiceImpl implements NoteService {
         deleteNoteAndFlush(note);
         removeOrphanTags(oldTagNames);
         counter.updateNotesCount(note.getUser(), false);
+        feeder.onNoteDeleted(note.getId());
     }
 
     @Transactional
