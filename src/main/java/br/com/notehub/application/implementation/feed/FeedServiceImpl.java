@@ -43,10 +43,18 @@ public class FeedServiceImpl implements FeedService {
         return requestingContainsRequested && requestedContainsRequesting;
     }
 
+    private boolean canSeeNote(Note note, Flame flame, Comment comment) {
+        if (note != null) return !note.isHidden();
+        if (flame != null) return !flame.getNote().isHidden();
+        if (comment != null) return !comment.getNote().isHidden();
+        return true;
+    }
+
     private void fanOut(FeedEvent event, User actor, User related, Note note, Flame flame, Comment comment) {
         Set<User> followers = actor.getFollowers();
         List<Feed> events = followers.stream()
                 .filter(f -> canSeeProfile(actor, f))
+                .filter(f -> canSeeNote(note, flame, comment))
                 .map(f -> new Feed(event, f, actor, related, note, flame, comment))
                 .toList();
         repository.saveAll(events);
@@ -58,7 +66,7 @@ public class FeedServiceImpl implements FeedService {
     public void onProfilePrivacyChanged(UUID actorId, boolean isPrivateProfile) {
         User user = userRepository.findById(actorId).orElseThrow(EntityNotFoundException::new);
         if (!isPrivateProfile) return;
-        repository.deleteEventsForNonMutualFollowers(user.getId());
+        repository.deleteActorEventsForNonMutualFollowers(user.getId());
     }
 
     @Async
@@ -73,12 +81,13 @@ public class FeedServiceImpl implements FeedService {
     @Async
     @Transactional
     @Override
-    public void onUserUnfollowed(UUID followerId, UUID followingId) {
-        User follower = userRepository.findById(followerId).orElseThrow(EntityNotFoundException::new);
-        repository.deleteFollowEvent(followerId, followingId);
-        repository.deleteAllEventsByActorForRecipient(followingId, followerId);
-        if (follower.isProfilePrivate()) {
-            repository.deleteAllEventsByActorForRecipient(followerId, followingId);
+    public void onUserUnfollowed(UUID unfollowingId, UUID followingId) {
+        User exfollower = userRepository.findById(unfollowingId).orElseThrow(EntityNotFoundException::new);
+        User exfollowing = userRepository.findById(followingId).orElseThrow(EntityNotFoundException::new);
+        repository.deleteActorFollowEvent(unfollowingId, followingId);
+        repository.deleteAllExRecipientEventsOnUnfollowEventByActor(followingId, unfollowingId);
+        if (!canSeeProfile(exfollowing, exfollower)) {
+            repository.deleteAllExRecipientEventsOnUnfollowEventByActor(unfollowingId, followingId);
         }
     }
 
@@ -95,15 +104,8 @@ public class FeedServiceImpl implements FeedService {
     @Transactional
     @Override
     public void onNoteHidden(UUID noteId) {
-        repository.deleteAllByNoteId(noteId);
-    }
-
-    @Async
-    @Transactional
-    @Override
-    public void onNoteDeleted(UUID noteId) {
         Note note = noteRepository.findById(noteId).orElseThrow(EntityNotFoundException::new);
-        repository.deleteAllByNoteId(note.getId());
+        if (note.isHidden()) repository.deleteAllByNoteId(noteId);
     }
 
     @Async
@@ -117,25 +119,9 @@ public class FeedServiceImpl implements FeedService {
     @Async
     @Transactional
     @Override
-    public void onNoteUnflamed(UUID flameId) {
-        Flame flame = flameRepository.findById(flameId).orElseThrow(EntityNotFoundException::new);
-        repository.deleteAllByFlameId(flame.getId());
-    }
-
-    @Async
-    @Transactional
-    @Override
     public void onNoteCommented(UUID commentId) {
         Comment comment = commentRepository.findById(commentId).orElseThrow(EntityNotFoundException::new);
         fanOut(FeedEvent.NOTE_COMMENTED, comment.getUser(), null, null, null, comment);
-    }
-
-    @Async
-    @Transactional
-    @Override
-    public void onCommentDeleted(UUID commentId) {
-        Comment comment = commentRepository.findById(commentId).orElseThrow(EntityNotFoundException::new);
-        repository.deleteAllByCommentId(comment.getId());
     }
 
     @Override

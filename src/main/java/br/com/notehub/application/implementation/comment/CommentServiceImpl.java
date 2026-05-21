@@ -97,7 +97,6 @@ public class CommentServiceImpl implements CommentService {
         validateAccess(idFromToken, comment.getUser().getId());
         repository.delete(comment);
         counter.updateCommentsCount(comment.getNote(), false);
-        feeder.onCommentDeleted(comment.getId());
     }
 
     @Transactional(readOnly = true)

@@ -35,27 +35,27 @@ public class Feed {
 
     @JoinColumn(name = "actor_id")
     @ManyToOne(fetch = FetchType.LAZY)
-    @OnDelete(action = OnDeleteAction.SET_NULL)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User actor;
 
     @JoinColumn(name = "related_user_id")
     @ManyToOne(fetch = FetchType.LAZY)
-    @OnDelete(action = OnDeleteAction.SET_NULL)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User related;
 
     @JoinColumn(name = "note_id")
     @ManyToOne(fetch = FetchType.LAZY)
-    @OnDelete(action = OnDeleteAction.SET_NULL)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Note note;
 
     @JoinColumn(name = "flame_id")
     @ManyToOne(fetch = FetchType.LAZY)
-    @OnDelete(action = OnDeleteAction.SET_NULL)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Flame flame;
 
     @JoinColumn(name = "comment_id")
     @ManyToOne(fetch = FetchType.LAZY)
-    @OnDelete(action = OnDeleteAction.SET_NULL)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Comment comment;
 
     public Feed(FeedEvent event, User recipient, User actor, User related, Note note, Flame flame, Comment comment) {

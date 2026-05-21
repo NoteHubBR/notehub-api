@@ -36,7 +36,7 @@ public interface FeedRepository extends JpaRepository<Feed, UUID> {
                 AND f1.id = f2.id
             )
             """)
-    void deleteEventsForNonMutualFollowers(@Param("actorId") UUID actorId);
+    void deleteActorEventsForNonMutualFollowers(@Param("actorId") UUID actorId);
 
     @Modifying
     @Query("""
@@ -45,7 +45,7 @@ public interface FeedRepository extends JpaRepository<Feed, UUID> {
             AND f.related.id = :followingId
             AND f.event = 'User_Followed'
             """)
-    void deleteFollowEvent(@Param("followerId") UUID followerId, @Param("followingId") UUID followingId);
+    void deleteActorFollowEvent(@Param("followerId") UUID followerId, @Param("followingId") UUID followingId);
 
     @Modifying
     @Query("""
@@ -53,14 +53,8 @@ public interface FeedRepository extends JpaRepository<Feed, UUID> {
             WHERE f.actor.id = :actorId
             AND f.recipient.id = :recipientId
             """)
-    void deleteAllEventsByActorForRecipient(@Param("actorId") UUID actorId, @Param("recipientId") UUID recipientId);
+    void deleteAllExRecipientEventsOnUnfollowEventByActor(@Param("actorId") UUID actorId, @Param("recipientId") UUID recipientId);
 
     void deleteAllByNoteId(UUID noteId);
-
-    void deleteAllByFlameId(UUID flameId);
-
-    void deleteAllByCommentId(UUID commentId);
-
-    void deleteAllByActorId(UUID actorId);
 
 }

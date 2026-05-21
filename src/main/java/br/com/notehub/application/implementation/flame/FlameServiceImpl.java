@@ -65,9 +65,8 @@ public class FlameServiceImpl implements FlameService {
     @Override
     public void deflame(UUID userIdFromToken, UUID noteIdFromPath) {
         Flame flame = repository.findByUserIdAndNoteId(userIdFromToken, noteIdFromPath).orElseThrow(EntityNotFoundException::new);
-        counter.updateFlamesCount(flame.getNote(), false);
-        feeder.onNoteUnflamed(flame.getId());
         repository.delete(flame);
+        counter.updateFlamesCount(flame.getNote(), false);
     }
 
     @Transactional(readOnly = true)

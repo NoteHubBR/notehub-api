@@ -110,6 +110,7 @@ public class NoteServiceImpl implements NoteService {
             note.setHidden(hidden);
             removeOrphanTags(oldTags);
         });
+        feeder.onNoteHidden(idFromPath);
     }
 
     @Transactional
@@ -162,7 +163,6 @@ public class NoteServiceImpl implements NoteService {
         deleteNoteAndFlush(note);
         removeOrphanTags(oldTagNames);
         counter.updateNotesCount(note.getUser(), false);
-        feeder.onNoteDeleted(note.getId());
     }
 
     @Transactional
