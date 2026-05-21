@@ -7,7 +7,9 @@ import br.com.notehub.application.dto.response.user.DetailUserRES;
 import br.com.notehub.domain.feed.Feed;
 import br.com.notehub.domain.feed.FeedEvent;
 
-import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 public record FeedEventRES(
         FeedEvent event,
@@ -17,7 +19,7 @@ public record FeedEventRES(
         LowDetailNoteRES note,
         DetailFlameRES flame,
         DetailCommentRES comment,
-        Instant createdAt
+        String created_at
 ) {
     public FeedEventRES(Feed feed) {
         this(
@@ -28,7 +30,7 @@ public record FeedEventRES(
                 feed.getNote() == null ? null : new LowDetailNoteRES(feed.getNote()),
                 feed.getFlame() == null ? null : new DetailFlameRES(feed.getFlame()),
                 feed.getComment() == null ? null : new DetailCommentRES(feed.getComment()),
-                feed.getCreatedAt()
+                feed.getCreatedAt().atZone(ZoneId.of("America/Sao_Paulo")).format(DateTimeFormatter.ofPattern("d/M/yy HH:mm", Locale.of("pt-BR")))
         );
     }
 }
