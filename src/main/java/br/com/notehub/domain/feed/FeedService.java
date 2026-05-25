@@ -5,6 +5,7 @@ import br.com.notehub.application.dto.response.page.PageRES;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -24,6 +25,6 @@ public interface FeedService {
 
     void onNoteCommented(UUID commentId);
 
-    PageRES<FeedEventRES> getFeed(Pageable pageable, UUID recipientId);
+    PageRES<FeedEventRES> getFeed(Pageable pageable, UUID recipientId, List<FeedEvent> events);
 
 }

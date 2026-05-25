@@ -4,10 +4,7 @@ import br.com.notehub.application.dto.response.feed.FeedEventRES;
 import br.com.notehub.application.dto.response.page.PageRES;
 import br.com.notehub.domain.comment.Comment;
 import br.com.notehub.domain.comment.CommentRepository;
-import br.com.notehub.domain.feed.Feed;
-import br.com.notehub.domain.feed.FeedEvent;
-import br.com.notehub.domain.feed.FeedRepository;
-import br.com.notehub.domain.feed.FeedService;
+import br.com.notehub.domain.feed.*;
 import br.com.notehub.domain.flame.Flame;
 import br.com.notehub.domain.flame.FlameRepository;
 import br.com.notehub.domain.note.Note;
@@ -18,6 +15,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -125,10 +123,11 @@ public class FeedServiceImpl implements FeedService {
     }
 
     @Override
-    public PageRES<FeedEventRES> getFeed(Pageable pageable, UUID recipientId) {
-        Page<FeedEventRES> page = repository
-                .findFeedForUser(pageable, recipientId)
-                .map(FeedEventRES::new);
+    public PageRES<FeedEventRES> getFeed(Pageable pageable, UUID recipientId, List<FeedEvent> events) {
+        Specification<Feed> spec = Specification
+                .where(FeedSpec.forRecipient(recipientId))
+                .and(FeedSpec.withEvents(events));
+        Page<FeedEventRES> page = repository.findAll(spec, pageable).map(FeedEventRES::new);
         return new PageRES<>(page);
     }
 

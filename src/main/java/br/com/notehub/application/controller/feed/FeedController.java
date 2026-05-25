@@ -2,6 +2,7 @@ package br.com.notehub.application.controller.feed;
 
 import br.com.notehub.application.dto.response.feed.FeedEventRES;
 import br.com.notehub.application.dto.response.page.PageRES;
+import br.com.notehub.domain.feed.FeedEvent;
 import br.com.notehub.domain.feed.FeedService;
 import com.auth0.jwt.JWT;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -14,11 +15,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -39,10 +38,11 @@ public class FeedController {
     @GetMapping
     public ResponseEntity<PageRES<FeedEventRES>> getFeed(
             @Parameter(hidden = true) @RequestHeader("Authorization") String accessToken,
+            @RequestParam(required = false) List<FeedEvent> events,
             @ParameterObject @PageableDefault(page = 0, size = 25, sort = {"createdAt"}, direction = Sort.Direction.DESC) Pageable pageable
     ) {
         UUID idFromToken = getSubject(accessToken);
-        PageRES<FeedEventRES> feed = service.getFeed(pageable, idFromToken);
+        PageRES<FeedEventRES> feed = service.getFeed(pageable, idFromToken, events);
         return ResponseEntity.status(HttpStatus.OK).body(feed);
     }
 
