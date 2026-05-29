@@ -23,9 +23,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -260,17 +262,6 @@ public class NoteServiceImpl implements NoteService {
     @Override
     public PageRES<LowDetailNoteRES> getAllUserNotesById(Pageable pageable, UUID idFromToken) {
         Page<LowDetailNoteRES> page = repository.findAllByUserId(pageable, idFromToken).map(LowDetailNoteRES::new);
-        return new PageRES<>(page);
-    }
-
-    @Override
-    public PageRES<LowDetailNoteRES> getAllFollowedUsersNotes(Pageable pageable, UUID idFromToken) {
-        User user = userRepository.findByIdWithFollowersAndFollowing(idFromToken).orElseThrow(EntityNotFoundException::new);
-        Set<UUID> following = user.getFollowing().stream().map(User::getId).collect(Collectors.toSet());
-        Set<UUID> followers = user.getFollowers().stream().map(User::getId).collect(Collectors.toSet());
-        Set<UUID> mutuals = new HashSet<>(following);
-        mutuals.retainAll(followers);
-        Page<LowDetailNoteRES> page = repository.findAllForUserFeed(pageable, following, mutuals).map(LowDetailNoteRES::new);
         return new PageRES<>(page);
     }
 

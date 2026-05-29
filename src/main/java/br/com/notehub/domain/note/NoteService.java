@@ -58,8 +58,6 @@ public interface NoteService {
 
     PageRES<LowDetailNoteRES> getAllUserNotesById(Pageable pageable, UUID idFromToken);
 
-    PageRES<LowDetailNoteRES> getAllFollowedUsersNotes(Pageable pageable, UUID idFromToken);
-
     PageRES<LowDetailNoteRES> getAllFollowedUserNotes(Pageable pageable, UUID idFromToken, String username);
 
 }
