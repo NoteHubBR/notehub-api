@@ -3,6 +3,7 @@ package br.com.notehub.implementation.user;
 import br.com.notehub.application.counter.Counter;
 import br.com.notehub.application.dto.notification.MessageNotification;
 import br.com.notehub.application.implementation.user.UserServiceImpl;
+import br.com.notehub.domain.feed.FeedService;
 import br.com.notehub.domain.notification.NotificationService;
 import br.com.notehub.domain.user.User;
 import br.com.notehub.domain.user.UserRepository;
@@ -35,6 +36,9 @@ public class UserRelationshipTest {
 
     @Mock
     private Counter counter;
+
+    @Mock
+    private FeedService feeder;
 
     private User follower;
     private User following;
