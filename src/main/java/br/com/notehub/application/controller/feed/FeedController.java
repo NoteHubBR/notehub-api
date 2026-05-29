@@ -5,7 +5,11 @@ import br.com.notehub.application.dto.response.page.PageRES;
 import br.com.notehub.domain.feed.FeedEvent;
 import br.com.notehub.domain.feed.FeedService;
 import com.auth0.jwt.JWT;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +27,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/feed")
 @SecurityRequirement(name = "bearer-key")
-@Tag(name = "Feed Controller", description = "Endpoint for reading user feed")
+@Tag(name = "Feed Controller", description = "Endpoints for reading the authenticated user's feed")
 @RequiredArgsConstructor
 public class FeedController {
 
@@ -35,6 +39,16 @@ public class FeedController {
         return UUID.fromString(idFromToken);
     }
 
+    @Operation(
+            summary = "Get authenticated user's feed",
+            description = "Retrieves a paginated list of feed events for the authenticated user."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Feed retrieved successfully."),
+            @ApiResponse(responseCode = "400", description = "Invalid pageable criteria or unknown event type.", content = @Content(examples = {})),
+            @ApiResponse(responseCode = "403", description = "Access token is invalid or missing.", content = @Content(examples = {})),
+            @ApiResponse(responseCode = "500", description = "Internal server error.", content = @Content(examples = {}))
+    })
     @GetMapping
     public ResponseEntity<PageRES<FeedEventRES>> getFeed(
             @Parameter(hidden = true) @RequestHeader("Authorization") String accessToken,
