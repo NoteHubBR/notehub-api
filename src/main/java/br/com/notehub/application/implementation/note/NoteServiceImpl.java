@@ -5,6 +5,7 @@ import br.com.notehub.application.dto.request.note.CreateNoteREQ;
 import br.com.notehub.application.dto.response.note.DetailNoteRES;
 import br.com.notehub.application.dto.response.note.LowDetailNoteRES;
 import br.com.notehub.application.dto.response.page.PageRES;
+import br.com.notehub.domain.feed.FeedService;
 import br.com.notehub.domain.note.Note;
 import br.com.notehub.domain.note.NoteRepository;
 import br.com.notehub.domain.note.NoteService;
@@ -22,9 +23,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -34,6 +37,7 @@ public class NoteServiceImpl implements NoteService {
     private final TagRepository tagRepository;
     private final NoteRepository repository;
     private final Counter counter;
+    private final FeedService feeder;
 
     private void validateAccess(@Nullable UUID idFromToken, UUID idFromRequested) {
         if (idFromToken == null) throw new AccessDeniedException("Usuário sem permissão.");
@@ -92,6 +96,7 @@ public class NoteServiceImpl implements NoteService {
         Note note = mapToNote(idFromToken, req);
         repository.save(note);
         counter.updateNotesCount(note.getUser(), true);
+        feeder.onNoteCreated(note.getId());
         return new LowDetailNoteRES(note);
     }
 
@@ -107,6 +112,7 @@ public class NoteServiceImpl implements NoteService {
             note.setHidden(hidden);
             removeOrphanTags(oldTags);
         });
+        feeder.onNoteHidden(idFromPath);
     }
 
     @Transactional
@@ -137,6 +143,7 @@ public class NoteServiceImpl implements NoteService {
     @Override
     public void changeHidden(UUID idFromToken, UUID idFromPath) {
         changeField(idFromToken, idFromPath, note -> note.setHidden(!note.isHidden()));
+        feeder.onNoteHidden(idFromPath);
     }
 
     @Transactional
@@ -255,17 +262,6 @@ public class NoteServiceImpl implements NoteService {
     @Override
     public PageRES<LowDetailNoteRES> getAllUserNotesById(Pageable pageable, UUID idFromToken) {
         Page<LowDetailNoteRES> page = repository.findAllByUserId(pageable, idFromToken).map(LowDetailNoteRES::new);
-        return new PageRES<>(page);
-    }
-
-    @Override
-    public PageRES<LowDetailNoteRES> getAllFollowedUsersNotes(Pageable pageable, UUID idFromToken) {
-        User user = userRepository.findByIdWithFollowersAndFollowing(idFromToken).orElseThrow(EntityNotFoundException::new);
-        Set<UUID> following = user.getFollowing().stream().map(User::getId).collect(Collectors.toSet());
-        Set<UUID> followers = user.getFollowers().stream().map(User::getId).collect(Collectors.toSet());
-        Set<UUID> mutuals = new HashSet<>(following);
-        mutuals.retainAll(followers);
-        Page<LowDetailNoteRES> page = repository.findAllForUserFeed(pageable, following, mutuals).map(LowDetailNoteRES::new);
         return new PageRES<>(page);
     }
 

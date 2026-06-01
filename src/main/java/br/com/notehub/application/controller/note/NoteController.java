@@ -400,26 +400,6 @@ public class NoteController {
     }
 
     @Operation(
-            summary = "Get notes from followed users",
-            description = "Retrieves a paginated list of notes from users that the authenticated user is following."
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Notes retrieved successfully."),
-            @ApiResponse(responseCode = "400", description = "Invalid pageable criteria.", content = @Content(examples = {})),
-            @ApiResponse(responseCode = "403", description = "Access token is invalid or missing.", content = @Content(examples = {})),
-            @ApiResponse(responseCode = "500", description = "Internal server error.", content = @Content(examples = {}))
-    })
-    @GetMapping("/private/following")
-    public ResponseEntity<PageRES<LowDetailNoteRES>> getAllFollowingUsersNotes(
-            @Parameter(hidden = true) @RequestHeader("Authorization") String accessToken,
-            @ParameterObject @PageableDefault(page = 0, size = 10, sort = {"createdAt"}, direction = Sort.Direction.DESC) Pageable pageable
-    ) {
-        UUID idFromToken = getSubject(accessToken);
-        PageRES<LowDetailNoteRES> page = service.getAllFollowedUsersNotes(pageable, idFromToken);
-        return ResponseEntity.status(HttpStatus.OK).body(page);
-    }
-
-    @Operation(
             summary = "Get notes from a user with mutual connections",
             description = "Retrieves a paginated list of notes from a user that the authenticated user is following."
     )

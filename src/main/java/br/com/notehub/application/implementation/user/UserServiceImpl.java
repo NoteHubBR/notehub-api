@@ -2,6 +2,7 @@ package br.com.notehub.application.implementation.user;
 
 import br.com.notehub.application.counter.Counter;
 import br.com.notehub.application.dto.notification.MessageNotification;
+import br.com.notehub.domain.feed.FeedService;
 import br.com.notehub.domain.history.UserHistoryService;
 import br.com.notehub.domain.note.NoteService;
 import br.com.notehub.domain.notification.NotificationService;
@@ -46,6 +47,7 @@ public class UserServiceImpl implements UserService {
     private final NoteService noteService;
     private final PasswordEncoder encoder;
     private final Counter counter;
+    private final FeedService feeder;
 
     private void validateGif(User user, String img, String field) {
         if (img == null || !img.endsWith(".gif")) return;
@@ -189,6 +191,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public void changeProfileVisibility(UUID idFromToken) {
         changeField(idFromToken, "profile_private", User::isProfilePrivate, user -> user.setProfilePrivate(!user.isProfilePrivate()));
+        User actor = repository.findById(idFromToken).orElseThrow(EntityNotFoundException::new);
+        feeder.onProfilePrivacyChanged(actor.getId(), actor.isProfilePrivate());
     }
 
     @Transactional
@@ -248,6 +252,7 @@ public class UserServiceImpl implements UserService {
         if (isFollowing(follower, following)) throw new AlreadyFollowingException();
         counter.updateFollowersAndFollowingCount(follower, following, true);
         notifier.notify(follower, following, follower, MessageNotification.of(follower));
+        feeder.onUserFollowed(follower.getId(), following.getId());
     }
 
     @Transactional
@@ -257,6 +262,7 @@ public class UserServiceImpl implements UserService {
         User following = repository.findByUsernameWithFollowersAndFollowing(username).orElseThrow(EntityNotFoundException::new);
         if (!isFollowing(follower, following)) throw new NotFollowingException();
         counter.updateFollowersAndFollowingCount(follower, following, false);
+        feeder.onUserUnfollowed(follower.getId(), following.getId());
     }
 
     @Transactional

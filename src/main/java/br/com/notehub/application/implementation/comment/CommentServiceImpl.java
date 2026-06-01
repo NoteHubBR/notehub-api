@@ -9,6 +9,7 @@ import br.com.notehub.application.dto.response.page.PageRES;
 import br.com.notehub.domain.comment.Comment;
 import br.com.notehub.domain.comment.CommentRepository;
 import br.com.notehub.domain.comment.CommentService;
+import br.com.notehub.domain.feed.FeedService;
 import br.com.notehub.domain.note.Note;
 import br.com.notehub.domain.note.NoteRepository;
 import br.com.notehub.domain.notification.NotificationService;
@@ -36,6 +37,7 @@ public class CommentServiceImpl implements CommentService {
     private final CommentRepository repository;
     private final NotificationService notifier;
     private final Counter counter;
+    private final FeedService feeder;
 
     private void validateAccess(@Nullable UUID idFromToken, UUID idFromRequested) {
         if (idFromToken == null) throw new AccessDeniedException("Usuário sem permissão.");
@@ -72,6 +74,7 @@ public class CommentServiceImpl implements CommentService {
         repository.save(comment);
         counter.updateCommentsCount(comment.getNote(), true);
         notifier.notify(comment.getUser(), comment.getNote().getUser(), comment.getNote().getUser(), MessageNotification.of(comment));
+        feeder.onNoteCommented(comment.getId());
         return new CreateCommentRES(comment);
     }
 
