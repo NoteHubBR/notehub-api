@@ -18,10 +18,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static br.com.notehub.infra.exception.CustomExceptions.*;
@@ -111,12 +108,12 @@ public class FollowServiceImpl implements FollowService {
 
     @Override
     public Set<String> getUserMutualConnections(UUID id) {
-        Set<UUID> following = repository.findByFollowerId(id, Pageable.unpaged())
+        Set<UUID> following = new HashSet<>(repository.findByFollowerId(id, Pageable.unpaged())
                 .map(f -> f.getFollowing().getId())
-                .toSet();
-        Set<UUID> followers = repository.findByFollowingId(id, Pageable.unpaged())
+                .toSet());
+        Set<UUID> followers = new HashSet<>(repository.findByFollowingId(id, Pageable.unpaged())
                 .map(f -> f.getFollower().getId())
-                .toSet();
+                .toSet());
         following.retainAll(followers);
         return userRepository.findAllById(following).stream()
                 .map(User::getUsername)
