@@ -26,9 +26,9 @@ import java.util.*;
 @Table(name = "users")
 @NoArgsConstructor
 @Data
-@JsonIgnoreProperties({"tokens", "history", "notes", "comments", "replies", "flames", "followers", "following", "receivedNotifications", "sentNotifications", "relatedNotifications"})
-@ToString(exclude = {"tokens", "history", "notes", "comments", "replies", "flames", "followers", "following", "receivedNotifications", "sentNotifications", "relatedNotifications"})
-@EqualsAndHashCode(exclude = {"tokens", "history", "notes", "comments", "replies", "flames", "followers", "following", "receivedNotifications", "sentNotifications", "relatedNotifications"})
+@JsonIgnoreProperties({"tokens", "history", "notes", "comments", "replies", "flames", "receivedNotifications", "sentNotifications", "relatedNotifications"})
+@ToString(exclude = {"tokens", "history", "notes", "comments", "replies", "flames", "receivedNotifications", "sentNotifications", "relatedNotifications"})
+@EqualsAndHashCode(exclude = {"tokens", "history", "notes", "comments", "replies", "flames", "receivedNotifications", "sentNotifications", "relatedNotifications"})
 public class User implements UserDetails {
 
     @Id
@@ -107,17 +107,8 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "related")
     private List<Notification> relatedNotifications = new ArrayList<>();
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "user_follows",
-            joinColumns = @JoinColumn(name = "follower_id"),
-            inverseJoinColumns = @JoinColumn(name = "following_id")
-    )
-    private Set<User> following = new HashSet<>();
     private int followingCount = 0;
 
-    @ManyToMany(mappedBy = "following", fetch = FetchType.LAZY)
-    private Set<User> followers = new HashSet<>();
     private int followersCount = 0;
 
     @Override

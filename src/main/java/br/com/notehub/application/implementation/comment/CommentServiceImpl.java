@@ -10,6 +10,7 @@ import br.com.notehub.domain.comment.Comment;
 import br.com.notehub.domain.comment.CommentRepository;
 import br.com.notehub.domain.comment.CommentService;
 import br.com.notehub.domain.feed.FeedService;
+import br.com.notehub.domain.follow.FollowService;
 import br.com.notehub.domain.note.Note;
 import br.com.notehub.domain.note.NoteRepository;
 import br.com.notehub.domain.notification.NotificationService;
@@ -35,6 +36,7 @@ public class CommentServiceImpl implements CommentService {
     private final UserRepository userRepository;
     private final NoteRepository noteRepository;
     private final CommentRepository repository;
+    private final FollowService followService;
     private final NotificationService notifier;
     private final Counter counter;
     private final FeedService feeder;
@@ -43,16 +45,6 @@ public class CommentServiceImpl implements CommentService {
         if (idFromToken == null) throw new AccessDeniedException("Usuário sem permissão.");
         if (!Objects.equals(idFromToken, idFromRequested)) {
             throw new AccessDeniedException("Usuário sem permissão.");
-        }
-    }
-
-    private void validateBidirectionalFollowAccess(@Nullable User requesting, User requested) {
-        if (requesting == null) throw new AccessDeniedException("Não há vínculo bidirecional entre os usuários.");
-        boolean isSameUser = Objects.equals(requesting.getUsername(), requested.getUsername());
-        boolean requestedContainsRequesting = requested.getFollowing().contains(requesting);
-        boolean requestingContainsRequested = requesting.getFollowing().contains(requested);
-        if (!isSameUser && (!requestedContainsRequesting || !requestingContainsRequested)) {
-            throw new AccessDeniedException("Não há vínculo bidirecional entre os usuários.");
         }
     }
 
@@ -107,7 +99,7 @@ public class CommentServiceImpl implements CommentService {
         User author = requested.getUser();
         if (author != null) {
             if (requested.isHidden()) validateAccess(idFromToken, author.getId());
-            if (author.isProfilePrivate()) validateBidirectionalFollowAccess(requesting, author);
+            if (author.isProfilePrivate()) followService.validateBidirectionalFollowAccess(requesting, author);
         }
         Page<DetailCommentRES> page = repository.findAllByNoteId(pageable, requested.getId()).map(DetailCommentRES::new);
         return new PageRES<>(page);

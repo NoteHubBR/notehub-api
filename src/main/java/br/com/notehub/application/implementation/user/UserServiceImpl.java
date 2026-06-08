@@ -1,24 +1,22 @@
 package br.com.notehub.application.implementation.user;
 
-import br.com.notehub.application.counter.Counter;
-import br.com.notehub.application.dto.notification.MessageNotification;
 import br.com.notehub.domain.feed.FeedService;
+import br.com.notehub.domain.follow.FollowService;
+import br.com.notehub.domain.follow.events.UserDeletedEvent;
 import br.com.notehub.domain.history.UserHistoryService;
 import br.com.notehub.domain.note.NoteService;
-import br.com.notehub.domain.notification.NotificationService;
 import br.com.notehub.domain.token.TokenService;
 import br.com.notehub.domain.user.Subscription;
 import br.com.notehub.domain.user.User;
 import br.com.notehub.domain.user.UserRepository;
 import br.com.notehub.domain.user.UserService;
-import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -32,7 +30,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static br.com.notehub.infra.exception.CustomExceptions.*;
 
@@ -41,12 +38,12 @@ import static br.com.notehub.infra.exception.CustomExceptions.*;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository repository;
+    private final ApplicationEventPublisher eventPublisher;
     private final UserHistoryService historian;
-    private final NotificationService notifier;
+    private final FollowService followService;
     private final TokenService tokenService;
     private final NoteService noteService;
     private final PasswordEncoder encoder;
-    private final Counter counter;
     private final FeedService feeder;
 
     private void validateGif(User user, String img, String field) {
@@ -93,32 +90,6 @@ public class UserServiceImpl implements UserService {
 
     private void validateActiveField(boolean active) {
         if (!active) throw new EntityNotFoundException();
-    }
-
-    private void validateBidirectionalFollowAccess(@Nullable User requesting, User requested) {
-        if (!requested.isProfilePrivate()) return;
-        if (requesting == null) throw new AccessDeniedException("Não há vínculo bidirecional entre os usuários.");
-        boolean isSameUser = Objects.equals(requesting.getUsername(), requested.getUsername());
-        boolean requestedContainsRequesting = requested.getFollowing().contains(requesting);
-        boolean requestingContainsRequested = requesting.getFollowing().contains(requested);
-        if (!isSameUser && (!requestedContainsRequesting || !requestingContainsRequested)) {
-            throw new AccessDeniedException("Não há vínculo bidirecional entre os usuários.");
-        }
-    }
-
-    private Page<User> getUserConnections(Pageable pageable, String q, UUID userRequestingId, String userRequestedUsername, Function<User, Set<User>> getter) {
-        User requesting = (userRequestingId != null) ? repository.findById(userRequestingId).orElseThrow(EntityNotFoundException::new) : null;
-        User requested = repository.findByUsername(userRequestedUsername).orElseThrow(EntityNotFoundException::new);
-        validateBidirectionalFollowAccess(requesting, requested);
-        List<UUID> ids = getter.apply(requested).stream().map(User::getId).toList();
-        return repository.findAllByIdIn(pageable, q, ids);
-    }
-
-    private boolean isFollowing(User follower, User following) {
-        if (Objects.equals(follower.getId(), following.getId())) {
-            throw new SelfFollowException();
-        }
-        return following.getFollowers().contains(follower);
     }
 
     private Subscription validateSubscription(String subscriptionStr) {
@@ -246,44 +217,16 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public void follow(UUID idFromToken, String username) {
-        User follower = repository.findByIdWithFollowersAndFollowing(idFromToken).orElseThrow(EntityNotFoundException::new);
-        User following = repository.findByUsernameWithFollowersAndFollowing(username).orElseThrow(EntityNotFoundException::new);
-        if (isFollowing(follower, following)) throw new AlreadyFollowingException();
-        counter.updateFollowersAndFollowingCount(follower, following, true);
-        notifier.notify(follower, following, follower, MessageNotification.of(follower));
-        feeder.onUserFollowed(follower.getId(), following.getId());
-    }
-
-    @Transactional
-    @Override
-    public void unfollow(UUID idFromToken, String username) {
-        User follower = repository.findByIdWithFollowersAndFollowing(idFromToken).orElseThrow(EntityNotFoundException::new);
-        User following = repository.findByUsernameWithFollowersAndFollowing(username).orElseThrow(EntityNotFoundException::new);
-        if (!isFollowing(follower, following)) throw new NotFollowingException();
-        counter.updateFollowersAndFollowingCount(follower, following, false);
-        feeder.onUserUnfollowed(follower.getId(), following.getId());
-    }
-
-    @Transactional
-    @Override
     public void delete(UUID idFromToken, String password) {
         User user = repository.findById(idFromToken).orElseThrow(EntityNotFoundException::new);
         boolean matches = encoder.matches(password, user.getPassword());
         if (!matches) throw new BadCredentialsException("password");
-        user.getFollowing().forEach(following -> {
-            following.getFollowers().remove(user);
-            following.setFollowersCount(following.getFollowersCount() - 1);
-            repository.save(following);
-        });
-        user.getFollowers().forEach(follower -> {
-            follower.getFollowing().remove(user);
-            follower.setFollowingCount(follower.getFollowingCount() - 1);
-            repository.save(follower);
-        });
         if (user.isProfilePrivate()) noteService.deleteAllUserNotes(user);
         else noteService.deleteAllUserHiddenNotes(user);
+        Set<UUID> followersIds = followService.getUserFollowersId(idFromToken);
+        Set<UUID> followingIds = followService.getUserFollowingId(idFromToken);
         repository.delete(user);
+        eventPublisher.publishEvent(new UserDeletedEvent(followersIds, followingIds));
     }
 
     @Override
@@ -301,27 +244,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public Page<User> findAll(Pageable pageable, String q) {
         return repository.findAllActiveUsersByUsernameOrDisplayName(pageable, q);
-    }
-
-    @Transactional(readOnly = true)
-    @Override
-    public Page<User> getUserFollowing(Pageable pageable, String q, UUID idFromToken, String username) {
-        return getUserConnections(pageable, q, idFromToken, username, User::getFollowing);
-    }
-
-    @Transactional(readOnly = true)
-    @Override
-    public Page<User> getUserFollowers(Pageable pageable, String q, UUID idFromToken, String username) {
-        return getUserConnections(pageable, q, idFromToken, username, User::getFollowers);
-    }
-
-    @Override
-    public Set<String> getUserMutualConnections(UUID id) {
-        User user = repository.findByIdWithFollowersAndFollowing(id).orElseThrow(EntityNotFoundException::new);
-        Set<String> following = user.getFollowing().stream().map(User::getUsername).collect(Collectors.toSet());
-        Set<String> followers = user.getFollowers().stream().map(User::getUsername).collect(Collectors.toSet());
-        following.retainAll(followers);
-        return following;
     }
 
     @Override
