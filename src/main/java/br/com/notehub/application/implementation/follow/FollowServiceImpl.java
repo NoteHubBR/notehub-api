@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
@@ -62,6 +63,7 @@ public class FollowServiceImpl implements FollowService {
         }
     }
 
+    @Transactional
     @Override
     public void follow(UUID followerId, String username) {
         User follower = findUser(followerId);
@@ -74,6 +76,7 @@ public class FollowServiceImpl implements FollowService {
         feeder.onUserFollowed(follower.getId(), following.getId());
     }
 
+    @Transactional
     @Override
     public void unfollow(UUID followerId, String username) {
         User follower = findUser(followerId);
@@ -122,16 +125,12 @@ public class FollowServiceImpl implements FollowService {
 
     @Override
     public Set<UUID> getUserFollowersId(UUID id) {
-        return repository.findByFollowingId(id, Pageable.unpaged())
-                .map(f -> f.getFollower().getId())
-                .toSet();
+        return repository.findFollowerIdsByFollowingId(id);
     }
 
     @Override
     public Set<UUID> getUserFollowingId(UUID id) {
-        return repository.findByFollowerId(id, Pageable.unpaged())
-                .map(f -> f.getFollowing().getId())
-                .toSet();
+        return repository.findFollowingIdsByFollowerId(id);
     }
 
 }
