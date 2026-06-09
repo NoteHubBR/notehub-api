@@ -29,18 +29,24 @@ public class Counter {
 
     public void updateFollowersAndFollowingCount(User follower, User following, boolean increment) {
         if (increment) {
-            follower.getFollowing().add(following);
             follower.setFollowingCount(follower.getFollowingCount() + 1);
-            following.getFollowers().add(follower);
             following.setFollowersCount(following.getFollowersCount() + 1);
         } else {
-            follower.getFollowing().remove(following);
             follower.setFollowingCount(follower.getFollowingCount() - 1);
-            following.getFollowers().remove(follower);
             following.setFollowersCount(following.getFollowersCount() - 1);
         }
         userRepository.save(follower);
         userRepository.save(following);
+    }
+
+    public void decrementFollowerCount(User following) {
+        following.setFollowersCount(following.getFollowersCount() - 1);
+        userRepository.save(following);
+    }
+
+    public void decrementFollowingCount(User follower) {
+        follower.setFollowingCount(follower.getFollowingCount() - 1);
+        userRepository.save(follower);
     }
 
     public void updateCommentsCount(Note note, boolean increment) {

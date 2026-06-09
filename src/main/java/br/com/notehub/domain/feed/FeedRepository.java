@@ -16,13 +16,17 @@ public interface FeedRepository extends JpaRepository<Feed, UUID>, JpaSpecificat
     @Query("""
             DELETE FROM Feed f
             WHERE f.actor.id = :actorId
-            AND f.recipient.id NOT IN (
-                SELECT f1.id FROM User actor
-                JOIN actor.followers f1
-                JOIN actor.following f2
-                WHERE actor.id = :actorId
-                AND f1.id = f2.id
-            )
+              AND f.recipient.id NOT IN (
+                  SELECT fl1.follower.id
+                  FROM Follow fl1
+                  WHERE fl1.following.id = :actorId
+                    AND EXISTS (
+                        SELECT 1
+                        FROM Follow fl2
+                        WHERE fl2.follower.id = :actorId
+                          AND fl2.following.id = fl1.follower.id
+                    )
+              )
             """)
     void deleteActorEventsForNonMutualFollowers(@Param("actorId") UUID actorId);
 

@@ -7,6 +7,8 @@ import br.com.notehub.domain.comment.CommentRepository;
 import br.com.notehub.domain.feed.*;
 import br.com.notehub.domain.flame.Flame;
 import br.com.notehub.domain.flame.FlameRepository;
+import br.com.notehub.domain.follow.Follow;
+import br.com.notehub.domain.follow.FollowRepository;
 import br.com.notehub.domain.note.Note;
 import br.com.notehub.domain.note.NoteRepository;
 import br.com.notehub.domain.user.User;
@@ -30,15 +32,17 @@ public class FeedServiceImpl implements FeedService {
 
     private final FeedRepository repository;
     private final UserRepository userRepository;
+    private final FollowRepository followRepository;
     private final NoteRepository noteRepository;
     private final FlameRepository flameRepository;
     private final CommentRepository commentRepository;
 
     private boolean canSeeProfile(User requesting, User requested) {
-        if (!requested.isProfilePrivate()) return true;
-        boolean requestedContainsRequesting = requested.getFollowing().contains(requesting);
-        boolean requestingContainsRequested = requesting.getFollowing().contains(requested);
-        return requestingContainsRequested && requestedContainsRequesting;
+        UUID requestingId = requesting.getId();
+        UUID requestedId = requested.getId();
+        boolean requestedFollowsRequesting = followRepository.existsByFollowerIdAndFollowingId(requestedId, requestingId);
+        boolean requestingFollowsRequested = followRepository.existsByFollowerIdAndFollowingId(requestingId, requestedId);
+        return requestedFollowsRequesting && requestingFollowsRequested;
     }
 
     private boolean canSeeNote(Note note, Flame flame, Comment comment) {
@@ -49,7 +53,9 @@ public class FeedServiceImpl implements FeedService {
     }
 
     private void fanOut(FeedEvent event, User actor, User related, Note note, Flame flame, Comment comment) {
-        Set<User> followers = actor.getFollowers();
+        Set<User> followers = followRepository.findByFollowingId(actor.getId(), Pageable.unpaged())
+                .map(Follow::getFollower)
+                .toSet();
         List<Feed> events = followers.stream()
                 .filter(f -> canSeeProfile(actor, f))
                 .filter(f -> canSeeNote(note, flame, comment))

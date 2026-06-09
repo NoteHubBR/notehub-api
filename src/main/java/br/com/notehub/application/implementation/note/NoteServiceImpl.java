@@ -6,6 +6,7 @@ import br.com.notehub.application.dto.response.note.DetailNoteRES;
 import br.com.notehub.application.dto.response.note.LowDetailNoteRES;
 import br.com.notehub.application.dto.response.page.PageRES;
 import br.com.notehub.domain.feed.FeedService;
+import br.com.notehub.domain.follow.FollowService;
 import br.com.notehub.domain.note.Note;
 import br.com.notehub.domain.note.NoteRepository;
 import br.com.notehub.domain.note.NoteService;
@@ -36,6 +37,7 @@ public class NoteServiceImpl implements NoteService {
     private final UserRepository userRepository;
     private final TagRepository tagRepository;
     private final NoteRepository repository;
+    private final FollowService followService;
     private final Counter counter;
     private final FeedService feeder;
 
@@ -43,16 +45,6 @@ public class NoteServiceImpl implements NoteService {
         if (idFromToken == null) throw new AccessDeniedException("Usuário sem permissão.");
         if (!Objects.equals(idFromToken, idFromRequested)) {
             throw new AccessDeniedException("Usuário sem permissão.");
-        }
-    }
-
-    private void validateBidirectionalFollowAccess(@Nullable User requesting, User requested) {
-        if (requesting == null) throw new AccessDeniedException("Não há vínculo bidirecional entre os usuários.");
-        boolean isSameUser = Objects.equals(requesting.getUsername(), requested.getUsername());
-        boolean requestedContainsRequesting = requested.getFollowing().contains(requesting);
-        boolean requestingContainsRequested = requesting.getFollowing().contains(requested);
-        if (!isSameUser && (!requestedContainsRequesting || !requestingContainsRequested)) {
-            throw new AccessDeniedException("Não há vínculo bidirecional entre os usuários.");
         }
     }
 
@@ -195,7 +187,7 @@ public class NoteServiceImpl implements NoteService {
     public List<String> getAllPublicUserTags(UUID idFromToken, String username) {
         User requesting = (idFromToken != null) ? userRepository.findById(idFromToken).orElseThrow(EntityNotFoundException::new) : null;
         User requested = userRepository.findByUsername(username).orElseThrow(EntityNotFoundException::new);
-        if (requested.isProfilePrivate()) validateBidirectionalFollowAccess(requesting, requested);
+        if (requested.isProfilePrivate()) followService.validateBidirectionalFollowAccess(requesting, requested);
         return tagRepository.findAllByNotesUserUsernameAndNotesHiddenFalseOrderByNameAsc(username).stream().map(Tag::getName).toList();
     }
 
@@ -234,7 +226,7 @@ public class NoteServiceImpl implements NoteService {
         User requesting = (idFromToken != null) ? userRepository.findById(idFromToken).orElseThrow(EntityNotFoundException::new) : null;
         User requested = userRepository.findByUsername(username).orElseThrow(EntityNotFoundException::new);
         if (Objects.equals(type, "hidden")) validateAccess(idFromToken, requested.getId());
-        if (requested.isProfilePrivate()) validateBidirectionalFollowAccess(requesting, requested);
+        if (requested.isProfilePrivate()) followService.validateBidirectionalFollowAccess(requesting, requested);
         Page<LowDetailNoteRES> page = repository.searchUserNotesBySpecs(pageable, username, q, tag, type).map(LowDetailNoteRES::new);
         return new PageRES<>(page);
     }
@@ -247,7 +239,7 @@ public class NoteServiceImpl implements NoteService {
         User author = requested.getUser();
         if (author != null) {
             if (requested.isHidden()) validateAccess(idFromToken, author.getId());
-            if (author.isProfilePrivate()) validateBidirectionalFollowAccess(requesting, author);
+            if (author.isProfilePrivate()) followService.validateBidirectionalFollowAccess(requesting, author);
         }
         return new DetailNoteRES(requested);
     }
@@ -267,9 +259,9 @@ public class NoteServiceImpl implements NoteService {
 
     @Override
     public PageRES<LowDetailNoteRES> getAllFollowedUserNotes(Pageable pageable, UUID idFromToken, String username) {
-        User requesting = userRepository.findByIdWithFollowersAndFollowing(idFromToken).orElseThrow(EntityNotFoundException::new);
-        User requested = userRepository.findByUsernameWithFollowersAndFollowing(username).orElseThrow(EntityNotFoundException::new);
-        if (requested.isProfilePrivate()) validateBidirectionalFollowAccess(requesting, requested);
+        User requesting = userRepository.findById(idFromToken).orElseThrow(EntityNotFoundException::new);
+        User requested = userRepository.findByUsername(username).orElseThrow(EntityNotFoundException::new);
+        if (requested.isProfilePrivate()) followService.validateBidirectionalFollowAccess(requesting, requested);
         Page<LowDetailNoteRES> page = repository.findAllByUserUsernameAndHiddenFalse(pageable, username).map(LowDetailNoteRES::new);
         return new PageRES<>(page);
     }
