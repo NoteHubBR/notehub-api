@@ -1,6 +1,8 @@
 package br.com.notehub.implementation.user;
 
 import br.com.notehub.application.implementation.user.UserServiceImpl;
+import br.com.notehub.domain.follow.FollowService;
+import br.com.notehub.domain.follow.events.UserDeletedEvent;
 import br.com.notehub.domain.note.NoteService;
 import br.com.notehub.domain.user.User;
 import br.com.notehub.domain.user.UserRepository;
@@ -10,10 +12,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -34,6 +38,12 @@ public class UserDeletionTest {
     @Mock
     private PasswordEncoder encoder;
 
+    @Mock
+    private FollowService followService;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
     private User user;
 
     private void mockFindById(User u) {
@@ -53,21 +63,21 @@ public class UserDeletionTest {
 
     @Test
     void shouldDeleteUser_whenPasswordMatches() {
-
         mockFindById(user);
         mockMatches(true);
+        when(followService.getUserFollowersId(user.getId())).thenReturn(Set.of());
+        when(followService.getUserFollowingId(user.getId())).thenReturn(Set.of());
 
         service.delete(user.getId(), user.getPassword());
 
         verify(repository).findById(user.getId());
         verify(repository).delete(user);
         verify(noteService).deleteAllUserHiddenNotes(user);
-
+        verify(eventPublisher).publishEvent(any(UserDeletedEvent.class));
     }
 
     @Test
     void shouldThrowBadCredentialsException_whenPasswordDoesNotMatch() {
-
         mockFindById(user);
         mockMatches(false);
 
@@ -78,7 +88,7 @@ public class UserDeletionTest {
         verify(repository).findById(user.getId());
         verify(repository, never()).delete(user);
         verify(noteService, never()).deleteAllUserHiddenNotes(user);
-
+        verify(eventPublisher, never()).publishEvent(any());
     }
 
 }
