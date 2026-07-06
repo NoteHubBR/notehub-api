@@ -7,9 +7,7 @@ import br.com.notehub.application.oauth.OAuthFacade;
 import br.com.notehub.domain.token.Token;
 import br.com.notehub.domain.token.TokenRepository;
 import br.com.notehub.domain.token.TokenService;
-import br.com.notehub.domain.user.Host;
-import br.com.notehub.domain.user.User;
-import br.com.notehub.domain.user.UserRepository;
+import br.com.notehub.domain.user.*;
 import br.com.notehub.infra.exception.CustomExceptions;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -20,7 +18,6 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,7 +30,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Base64;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -47,6 +44,7 @@ public class TokenServiceImpl implements TokenService {
     private final GeoIpService geoService;
     private final TokenRepository repository;
     private final UserRepository userRepository;
+    private final UserIdentityRepository userIdentityRepository;
     private final PasswordEncoder encoder;
 
     private UUID validateDevice(HttpServletRequest request) {
@@ -96,21 +94,30 @@ public class TokenServiceImpl implements TokenService {
         return token;
     }
 
-    private void validateInternalHost(Host host) {
-        if (Objects.equals(host, Host.NOTEHUB)) throw new CustomExceptions.HostNotAllowedException();
+    private void validateHasNoExternalIdentity(User user) {
+        if (userIdentityRepository.existsByUser(user)) throw new CustomExceptions.UserHasNoExternalIdentity();
     }
 
-    private void validateExternalHost(Host host) {
-        if (!Objects.equals(host, Host.NOTEHUB)) throw new CustomExceptions.HostNotAllowedException();
+    private User createUserIdentity(User user, Host host, OAuthResponse info) {
+        UserIdentity identity = UserIdentity.signin(user, host, info.id(), info.email());
+        userIdentityRepository.save(identity);
+        return user;
     }
 
-    private User findOrCreateUserFromOAuthInfo(OAuthResponse info, Host host) {
-        return userRepository.findByProviderId(info.id()).orElseGet(() -> {
-            if (userRepository.existsByEmail(info.email())) throw new DataIntegrityViolationException("email");
-            String username = oAuthFacade.resolveUniqueUsername(info.id(), info.username());
-            User provided = new User(info.id(), host, info.email(), username, info.displayName(), info.avatar());
-            return userRepository.save(provided);
-        });
+    private User createUserWithIdentity(Host host, OAuthResponse info) {
+        String username = oAuthFacade.resolveUniqueUsername(info.id(), info.username());
+        User user = User.oauthSignup(info.email(), username, info.displayName(), info.avatar());
+        userRepository.save(user);
+        return createUserIdentity(user, host, info);
+    }
+
+    private User findOrCreateUserFromOAuthInfo(Host host, OAuthResponse info) {
+        Optional<UserIdentity> existingIdentity = userIdentityRepository.findByHostAndProviderId(host, info.id());
+        if (existingIdentity.isPresent()) return existingIdentity.get().getUser();
+        Optional<User> existingUser = userRepository.findByEmail(info.email());
+        return existingUser
+                .map(user -> createUserIdentity(user, host, info))
+                .orElseGet(() -> createUserWithIdentity(host, info));
     }
 
     @Override
@@ -151,8 +158,6 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public String generatePasswordChangeToken(String email) {
-        User user = userRepository.findByEmail(email).orElseThrow(EntityNotFoundException::new);
-        validateExternalHost(user.getHost());
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
             return JWT.create()
@@ -184,7 +189,7 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public String generateSecretKey(String email) {
         User user = userRepository.findByEmail(email).orElseThrow(EntityNotFoundException::new);
-        validateInternalHost(user.getHost());
+        validateHasNoExternalIdentity(user);
         SecureRandom secureRandom = new SecureRandom();
         Base64.Encoder urlEncoder = Base64.getUrlEncoder().withoutPadding();
         byte[] bytes = new byte[32];
@@ -231,7 +236,7 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public AuthRES authWithGoogleAcc(HttpServletRequest request, String token) {
         OAuthResponse info = oAuthFacade.getGoogleUser(token);
-        User user = findOrCreateUserFromOAuthInfo(info, Host.GOOGLE);
+        User user = findOrCreateUserFromOAuthInfo(Host.GOOGLE, info);
         Token rToken = generateRefreshToken(request, user);
         repository.findByDevice(rToken.getDevice()).ifPresent(repository::delete);
         repository.save(rToken);
@@ -242,7 +247,7 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public AuthRES authWithGitHubAcc(HttpServletRequest request, String code) {
         OAuthResponse info = oAuthFacade.getGitHubUser(code);
-        User user = findOrCreateUserFromOAuthInfo(info, Host.GITHUB);
+        User user = findOrCreateUserFromOAuthInfo(Host.GITHUB, info);
         Token token = generateRefreshToken(request, user);
         repository.findByDevice(token.getDevice()).ifPresent(repository::delete);
         repository.save(token);

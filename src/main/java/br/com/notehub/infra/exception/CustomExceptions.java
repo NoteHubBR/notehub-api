@@ -95,9 +95,9 @@ public class CustomExceptions {
         }
     }
 
-    public static class HostNotAllowedException extends BusinessException {
-        public HostNotAllowedException() {
-            super("Host não autorizado.");
+    public static class UserHasNoExternalIdentity extends BusinessException {
+        public UserHasNoExternalIdentity() {
+            super("Sem vínculo externo.");
         }
     }
 
