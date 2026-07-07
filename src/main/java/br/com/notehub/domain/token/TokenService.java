@@ -1,21 +1,16 @@
 package br.com.notehub.domain.token;
 
 import br.com.notehub.application.dto.response.token.AuthRES;
-import br.com.notehub.application.dto.response.token.SessionRES;
 import br.com.notehub.domain.user.User;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
 @Service
 public interface TokenService {
-
-    Instant getExpirationTime(String tokenType);
 
     String generateToken(User user);
 
@@ -25,19 +20,13 @@ public interface TokenService {
 
     String generateEmailChangeToken(String email);
 
-    String generateSecretKey(String email);
+    UUID validateRefreshToken(HttpServletRequest request);
 
     String validateToken(String accessToken);
 
-    AuthRES auth(HttpServletRequest request, String identifier, String password) throws BadCredentialsException;
+    AuthRES issueSession(HttpServletRequest request, User user);
 
-    AuthRES authWithGoogleAcc(HttpServletRequest request, String token);
-
-    AuthRES authWithGitHubAcc(HttpServletRequest request, String code);
-
-    AuthRES recreateToken(HttpServletRequest request) throws TokenExpiredException;
-
-    void logout(HttpServletRequest request);
+    AuthRES recreateSession(HttpServletRequest request) throws TokenExpiredException;
 
     List<Token> getAllSessions(UUID uId, String password);
 
