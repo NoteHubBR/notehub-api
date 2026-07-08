@@ -1,7 +1,7 @@
 package br.com.notehub.application.implementation.auth;
 
 import br.com.notehub.application.dto.oauth.OAuthResponse;
-import br.com.notehub.application.dto.response.token.AuthRES;
+import br.com.notehub.application.dto.response.auth.AuthRES;
 import br.com.notehub.application.oauth.OAuthFacade;
 import br.com.notehub.domain.auth.AuthService;
 import br.com.notehub.domain.token.TokenService;

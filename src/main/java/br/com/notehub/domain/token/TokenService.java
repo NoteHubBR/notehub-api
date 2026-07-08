@@ -1,6 +1,6 @@
 package br.com.notehub.domain.token;
 
-import br.com.notehub.application.dto.response.token.AuthRES;
+import br.com.notehub.application.dto.response.auth.AuthRES;
 import br.com.notehub.domain.user.User;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import jakarta.servlet.http.HttpServletRequest;

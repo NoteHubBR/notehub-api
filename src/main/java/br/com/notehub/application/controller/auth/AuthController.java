@@ -5,7 +5,7 @@ import br.com.notehub.application.dto.request.token.AuthChangeREQ;
 import br.com.notehub.application.dto.request.token.AuthREQ;
 import br.com.notehub.application.dto.request.token.OAuth2GoogleREQ;
 import br.com.notehub.application.dto.request.token.OAuthGitHubREQ;
-import br.com.notehub.application.dto.response.token.AuthRES;
+import br.com.notehub.application.dto.response.auth.AuthRES;
 import br.com.notehub.domain.auth.AuthService;
 import br.com.notehub.domain.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;

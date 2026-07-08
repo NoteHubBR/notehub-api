@@ -1,6 +1,6 @@
 package br.com.notehub.domain.auth;
 
-import br.com.notehub.application.dto.response.token.AuthRES;
+import br.com.notehub.application.dto.response.auth.AuthRES;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;

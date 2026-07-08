@@ -1,6 +1,6 @@
 package br.com.notehub.application.implementation.token;
 
-import br.com.notehub.application.dto.response.token.AuthRES;
+import br.com.notehub.application.dto.response.auth.AuthRES;
 import br.com.notehub.application.geoip.GeoIpService;
 import br.com.notehub.domain.token.Token;
 import br.com.notehub.domain.token.TokenRepository;
