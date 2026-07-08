@@ -16,6 +16,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,6 +35,9 @@ public class OAuthGitHubService implements OAuthService {
 
     @Override
     public OAuthResponse getUser(String key) {
+
+        GitHubUserResponse userData;
+        List<EmailResponse> emailsData;
 
         try {
 
@@ -54,7 +58,7 @@ public class OAuthGitHubService implements OAuthService {
                     )
                     .build();
             HttpResponse<String> userResponse = client.send(userRequest, HttpResponse.BodyHandlers.ofString());
-            GitHubUserResponse userData = mapper.readValue(userResponse.body(), GitHubUserResponse.class);
+            userData = mapper.readValue(userResponse.body(), GitHubUserResponse.class);
 
             HttpRequest emailsRequest = HttpRequest.newBuilder()
                     .uri(URI.create("https://api.github.com/user/emails"))
@@ -65,25 +69,23 @@ public class OAuthGitHubService implements OAuthService {
                     .build();
             HttpResponse<String> emailsResponse = client.send(emailsRequest, HttpResponse.BodyHandlers.ofString());
 
-            List<EmailResponse> emailsData = mapper.readValue(
+            emailsData = mapper.readValue(
                     emailsResponse.body(),
                     new TypeReference<List<EmailResponse>>() {
                     }
             );
 
-            Optional<EmailResponse> opt = emailsData.stream().filter(e -> e.primary() && e.verified()).findFirst();
-            if (opt.isEmpty()) opt = emailsData.stream().filter(e -> Boolean.TRUE.equals(e.primary())).findFirst();
-            if (opt.isEmpty()) opt = emailsData.stream().filter(e -> Boolean.TRUE.equals(e.verified())).findFirst();
-
-            EmailResponse emailData = opt.orElseGet(() -> emailsData.isEmpty() ? null : emailsData.getFirst());
-
-            if (emailData == null) throw new JWTDecodeException("Email faltando.");
-
-            return new OAuthResponse(userData, emailData);
-
         } catch (Exception e) {
             throw new JWTDecodeException("Código inválido.");
         }
+
+        Optional<EmailResponse> opt = emailsData.stream()
+                .filter(EmailResponse::verified)
+                .max(Comparator.comparing(EmailResponse::primary));
+
+        EmailResponse emailData = opt.orElseThrow(() -> new JWTDecodeException("Nenhum email verificado."));
+
+        return new OAuthResponse(userData, emailData);
 
     }
 
