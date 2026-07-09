@@ -42,7 +42,7 @@ class UserCreationTest {
     private User user;
 
     private User createUser(String email, String username) {
-        User u = new User(email, username, username.toUpperCase(), "123");
+        User u = User.signup(email, username, username.toUpperCase(), "123");
         u.setId(UUID.randomUUID());
         u.setActive(true);
         return u;

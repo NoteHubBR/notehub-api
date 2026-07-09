@@ -34,7 +34,7 @@ public class UserEditionTest {
     private User user;
 
     private User updateUser(String name, boolean profilePrivate) {
-        return new User(name, name.toUpperCase(), null, null, null, profilePrivate);
+        return User.update(name, name.toUpperCase(), null, null, null, profilePrivate);
     }
 
     private void mockFindById(User user) {
@@ -43,7 +43,7 @@ public class UserEditionTest {
 
     @BeforeEach
     void setup() {
-        user = new User("tester@notehub.com.br", "tester", "TESTER", "123");
+        user = User.signup("tester@notehub.com.br", "tester", "TESTER", "123");
         user.setId(UUID.randomUUID());
         user.setActive(true);
     }
