@@ -6,6 +6,7 @@ import br.com.notehub.application.dto.response.page.PageRES;
 import br.com.notehub.application.dto.response.user.CreateUserRES;
 import br.com.notehub.application.dto.response.user.DetailUserRES;
 import br.com.notehub.domain.token.TokenService;
+import br.com.notehub.domain.user.Host;
 import br.com.notehub.domain.user.Subscription;
 import br.com.notehub.domain.user.User;
 import br.com.notehub.domain.user.UserService;
@@ -352,6 +353,21 @@ public class UserController {
     ) {
         User user = service.getUser(username);
         return ResponseEntity.status(HttpStatus.OK).body(new DetailUserRES(user));
+    }
+
+    @Operation(summary = "List user identities", description = "Returns all identities associated with the authenticated user.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "List of user identities retrieved successfully."),
+            @ApiResponse(responseCode = "403", description = "Invalid token.", content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "404", description = "User not found.", content = @Content(examples = {})),
+            @ApiResponse(responseCode = "500", description = "Internal server error.", content = @Content(examples = {}))
+    })
+    @GetMapping("/identities")
+    public ResponseEntity<List<Host>> getAllUserIdentities(
+            @Parameter(hidden = true) @RequestHeader("Authorization") String accessToken
+    ) {
+        UUID idFromToken = getSubject(accessToken);
+        return ResponseEntity.status(HttpStatus.OK).body(service.getUserIdentities(idFromToken));
     }
 
     @Operation(summary = "Get user display name history", description = "Retrieves the history of display names for a user by their username.")
