@@ -1,6 +1,6 @@
 CREATE TABLE user_identities (
     id UUID PRIMARY KEY NOT NULL,
-    user_id UUID NOT NULL REFERENCES users(id),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     host VARCHAR(255) NOT NULL,
     provider_id VARCHAR(255) NOT NULL,
     provider_email VARCHAR(255),
