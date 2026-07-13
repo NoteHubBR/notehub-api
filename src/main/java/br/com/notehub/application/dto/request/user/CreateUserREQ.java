@@ -39,6 +39,6 @@ public record CreateUserREQ(
 
 ) {
     public User toUser() {
-        return new User(email.toLowerCase(), username.toLowerCase(), displayName, password);
+        return User.signup(email.toLowerCase(), username.toLowerCase(), displayName, password);
     }
 }

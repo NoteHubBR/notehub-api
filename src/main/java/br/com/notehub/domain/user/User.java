@@ -35,8 +35,8 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(unique = true)
-    private String providerId;
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserIdentity> identities = new ArrayList<>();
 
     @Column(unique = true)
     private String email;
@@ -55,9 +55,6 @@ public class User implements UserDetails {
     private String message;
 
     private String password;
-
-    @Convert(converter = HostConverter.class)
-    private Host host;
 
     private boolean profilePrivate = false;
 
@@ -148,34 +145,37 @@ public class User implements UserDetails {
         subscriptions.remove(subscription);
     }
 
-    public User(String email, String username, String displayName, String password) {
-        this.host = Host.NOTEHUB;
-        this.email = email;
-        this.displayName = displayName;
-        this.username = username;
-        this.password = password;
-        this.active = false;
-        Collections.addAll(this.subscriptions, Subscription.MAINTENANCE, Subscription.RELEASE);
+    public static User signup(String email, String username, String displayName, String password) {
+        User user = new User();
+        user.email = email;
+        user.username = username;
+        user.displayName = displayName;
+        user.password = password;
+        user.active = false;
+        Collections.addAll(user.subscriptions, Subscription.MAINTENANCE, Subscription.RELEASE);
+        return user;
     }
 
-    public User(String id, Host host, String email, String username, String displayName, String avatar) {
-        this.providerId = id;
-        this.host = host;
-        this.email = email;
-        this.username = username.toLowerCase();
-        this.displayName = displayName;
-        this.avatar = avatar;
-        this.active = true;
-        Collections.addAll(this.subscriptions, Subscription.MAINTENANCE, Subscription.RELEASE);
+    public static User oauthSignup(String email, String username, String displayName, String avatar) {
+        User user = new User();
+        user.email = email;
+        user.username = username.toLowerCase();
+        user.displayName = displayName;
+        user.avatar = avatar;
+        user.active = true;
+        Collections.addAll(user.subscriptions, Subscription.MAINTENANCE, Subscription.RELEASE);
+        return user;
     }
 
-    public User(String username, String displayName, String avatar, String banner, String message, boolean profilePrivate) {
-        this.username = username;
-        this.displayName = displayName;
-        this.avatar = avatar;
-        this.banner = banner;
-        this.message = message;
-        this.profilePrivate = profilePrivate;
+    public static User update(String username, String displayName, String avatar, String banner, String message, boolean profilePrivate) {
+        User user = new User();
+        user.username = username;
+        user.displayName = displayName;
+        user.avatar = avatar;
+        user.banner = banner;
+        user.message = message;
+        user.profilePrivate = profilePrivate;
+        return user;
     }
 
 }

@@ -49,6 +49,6 @@ public record ChangeUserREQ(
 
 ) {
     public User toUser() {
-        return new User(username.toLowerCase(), displayName, avatar, banner, message, profilePrivate);
+        return User.update(username.toLowerCase(), displayName, avatar, banner, message, profilePrivate);
     }
 }

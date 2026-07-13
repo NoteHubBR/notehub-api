@@ -22,17 +22,19 @@ public class OAuthGoogleService implements OAuthService {
 
     @Override
     public OAuthResponse getUser(String token) {
+        GoogleUserResponse userData;
         try {
             HttpRequest codeRequest = HttpRequest.newBuilder()
                     .uri(URI.create("https://www.googleapis.com/oauth2/v1/userinfo"))
                     .headers("Accept", "application/json", "Authorization", "Bearer " + token)
                     .build();
             HttpResponse<String> tokenResponse = client.send(codeRequest, HttpResponse.BodyHandlers.ofString());
-            GoogleUserResponse userData = mapper.readValue(tokenResponse.body(), GoogleUserResponse.class);
-            return new OAuthResponse(userData);
+            userData = mapper.readValue(tokenResponse.body(), GoogleUserResponse.class);
         } catch (Exception e) {
             throw new JWTDecodeException("Token inválido.");
         }
+        if (userData.verifiedEmail()) return new OAuthResponse(userData);
+        throw new JWTDecodeException("Email não verificado.");
     }
 
 }

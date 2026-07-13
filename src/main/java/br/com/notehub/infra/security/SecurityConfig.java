@@ -43,7 +43,7 @@ public class SecurityConfig {
 
     private static final String[] PUBLIC_GET_ROUTES = {
             "/", "/docs",
-            "/api/v1/auth/refresh",
+            "/api/v1/tokens/refresh",
             "/api/v1/users", "/api/v1/users/**",
             "/api/v1/notes", "/api/v1/notes/**",
             "/api/v1/flames", "/api/v1/flames/**",

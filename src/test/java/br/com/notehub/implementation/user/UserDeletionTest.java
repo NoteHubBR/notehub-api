@@ -56,7 +56,7 @@ public class UserDeletionTest {
 
     @BeforeEach
     void setup() {
-        user = new User("tester@notehub.com.br", "tester", "TESTER", "123");
+        user = User.signup("tester@notehub.com.br", "tester", "TESTER", "123");
         user.setId(UUID.randomUUID());
         user.setActive(true);
     }

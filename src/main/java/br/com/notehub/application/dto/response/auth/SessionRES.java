@@ -1,4 +1,4 @@
-package br.com.notehub.application.dto.response.token;
+package br.com.notehub.application.dto.response.auth;
 
 import br.com.notehub.domain.token.Token;
 

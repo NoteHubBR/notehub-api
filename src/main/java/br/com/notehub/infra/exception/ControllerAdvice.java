@@ -256,8 +256,8 @@ public class ControllerAdvice {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errors.stream().map(CustomResponse::new).toList());
     }
 
-    @ExceptionHandler(HostNotAllowedException.class)
-    private ResponseEntity<List<CustomResponse>> handleHostNotAllowedException(HostNotAllowedException ex) {
+    @ExceptionHandler(UserHasNoExternalIdentity.class)
+    private ResponseEntity<List<CustomResponse>> handleHostNotAllowedException(UserHasNoExternalIdentity ex) {
         List<FieldError> errors = new ArrayList<>();
         errors.add(new FieldError("user", "host", ex.getMessage()));
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errors.stream().map(CustomResponse::new).toList());

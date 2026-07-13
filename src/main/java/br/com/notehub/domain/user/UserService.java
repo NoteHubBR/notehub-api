@@ -49,6 +49,8 @@ public interface UserService {
 
     Page<User> findAll(Pageable pageable, String q);
 
+    List<Host> getUserIdentities(UUID idFromToken);
+
     List<String> getUserDisplayNameHistory(String username);
 
     Set<Subscription> getUserSubscriptions(UUID idFromToken);

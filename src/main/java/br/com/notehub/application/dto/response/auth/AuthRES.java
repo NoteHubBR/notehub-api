@@ -1,4 +1,4 @@
-package br.com.notehub.application.dto.response.token;
+package br.com.notehub.application.dto.response.auth;
 
 import br.com.notehub.application.dto.response.user.PersonalUserRES;
 import br.com.notehub.domain.token.Token;
@@ -37,7 +37,6 @@ public record AuthRES(
                         token.getUser().getAvatar(),
                         token.getUser().getBanner(),
                         token.getUser().getMessage(),
-                        token.getUser().getHost(),
                         token.getUser().isProfilePrivate(),
                         token.getUser().isDev(),
                         token.getUser().isSponsor(),

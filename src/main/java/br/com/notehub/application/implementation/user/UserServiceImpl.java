@@ -6,10 +6,7 @@ import br.com.notehub.domain.follow.events.UserDeletedEvent;
 import br.com.notehub.domain.history.UserHistoryService;
 import br.com.notehub.domain.note.NoteService;
 import br.com.notehub.domain.token.TokenService;
-import br.com.notehub.domain.user.Subscription;
-import br.com.notehub.domain.user.User;
-import br.com.notehub.domain.user.UserRepository;
-import br.com.notehub.domain.user.UserService;
+import br.com.notehub.domain.user.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -38,6 +35,7 @@ import static br.com.notehub.infra.exception.CustomExceptions.*;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository repository;
+    private final UserIdentityRepository userIdentityRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final UserHistoryService historian;
     private final FollowService followService;
@@ -244,6 +242,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public Page<User> findAll(Pageable pageable, String q) {
         return repository.findAllActiveUsersByUsernameOrDisplayName(pageable, q);
+    }
+
+    @Override
+    public List<Host> getUserIdentities(UUID idFromToken) {
+        List<UserIdentity> identities = userIdentityRepository.findAllByUserIdOrderByLinkedAtDesc(idFromToken);
+        return identities.stream().map(UserIdentity::getHost).toList();
     }
 
     @Override

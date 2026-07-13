@@ -6,7 +6,6 @@ import lombok.Getter;
 @Getter
 public enum Host {
 
-    NOTEHUB("NoteHub"),
     GOOGLE("Google"),
     GITHUB("GitHub");
 

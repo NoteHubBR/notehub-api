@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public record GoogleUserResponse(
         @JsonProperty("id") String id,
         @JsonProperty("email") String email,
+        @JsonProperty("verified_email") boolean verifiedEmail,
         @JsonProperty("given_name") String username,
         @JsonProperty("name") String displayName,
         @JsonProperty("picture") String avatar
