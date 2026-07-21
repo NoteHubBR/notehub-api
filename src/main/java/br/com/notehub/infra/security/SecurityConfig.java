@@ -33,6 +33,7 @@ public class SecurityConfig {
     };
 
     private static final String[] PUBLIC_POST_ROUTES = {
+            "/api/v1/medias/**",
             "/api/v1/users/register", "/api/v1/auth/**",
             "/api/v1/payment/stripe/sponsorship/webhook"
     };
