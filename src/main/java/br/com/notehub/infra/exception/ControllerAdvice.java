@@ -276,4 +276,16 @@ public class ControllerAdvice {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(List.of(new CustomResponse(error)));
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    private ResponseEntity<List<CustomResponse>> handleIllegalArgumentException(IllegalArgumentException ex) {
+        FieldError error = new FieldError("user", "avatar", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(List.of(new CustomResponse(error)));
+    }
+
+    @ExceptionHandler(MediaProcessingException.class)
+    private ResponseEntity<List<CustomResponse>> handleMediaProcessingException(MediaProcessingException ex) {
+        FieldError error = new FieldError("user", "avatar", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(List.of(new CustomResponse(error)));
+    }
+
 }
