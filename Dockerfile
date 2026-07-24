@@ -21,6 +21,8 @@ RUN apk add --no-cache curl tar && \
 
 FROM eclipse-temurin:21-jdk-alpine
 
+RUN apk add --no-cache ffmpeg
+
 COPY --from=build ./target/NoteHub-3.0.2.jar app.jar
 COPY --from=geoip /geoip.mmdb /opt/geoip/GeoLite2-City.mmdb
 

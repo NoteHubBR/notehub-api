@@ -10,6 +10,7 @@ import br.com.notehub.domain.user.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -44,10 +45,18 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder encoder;
     private final FeedService feeder;
 
+    @Value("${supabase.url}")
+    private String supabaseUrl;
+
     private void validateGif(User user, String img, String field) {
-        if (img == null || !img.endsWith(".gif")) return;
-        if (field.equals("banner")) throw new GifNotAllowedException("banner", "GIFs são proibidos como banner.");
+        if (img == null) return;
+        String expectedPrefix = "%s/storage/v1/object/public/images/avatars/".formatted(supabaseUrl);
+        boolean isFromStorage = img.startsWith(expectedPrefix);
+        boolean isAnimatedMedia = img.endsWith(".gif") || img.endsWith(".webm");
+        if (!isAnimatedMedia) return;
         if (!user.isDev() && !user.isSponsor()) throw new GifNotAllowedException("avatar", "GIFs apenas para patrocinadores.");
+        if (field.equals("banner")) throw new GifNotAllowedException("banner", "GIFs são proibidos como banner.");
+        if (!isFromStorage) throw new GifNotAllowedException("avatar", "Mídia de avatar inválido.");
     }
 
     @SneakyThrows

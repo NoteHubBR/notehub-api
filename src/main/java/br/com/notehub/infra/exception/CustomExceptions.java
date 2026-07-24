@@ -113,6 +113,16 @@ public class CustomExceptions {
         }
     }
 
+    public static class MediaProcessingException extends BusinessException {
+        public MediaProcessingException(String message) {
+            super(message);
+        }
+
+        public MediaProcessingException(String message, Exception e) {
+            super(message);
+        }
+    }
+
     @Getter
     public static class GifNotAllowedException extends BusinessException {
 
