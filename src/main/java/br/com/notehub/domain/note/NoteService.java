@@ -54,6 +54,8 @@ public interface NoteService {
 
     PageRES<LowDetailNoteRES> findUserNotesBySpecs(UUID idFromToken, Pageable pageable, String username, String q, String tag, String type);
 
+    DetailNoteRES getNoteById(UUID idFromToken, UUID idFromPath);
+
     DetailNoteRES getNote(UUID idFromToken, String username, String name);
 
     PageRES<LowDetailNoteRES> getAllUserNotesByUsername(Pageable pageable, String username);

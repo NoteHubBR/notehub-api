@@ -357,8 +357,25 @@ public class NoteController {
             @ApiResponse(responseCode = "404", description = "Note not found.", content = @Content(examples = {})),
             @ApiResponse(responseCode = "500", description = "Internal server error.", content = @Content(examples = {}))
     })
+    @GetMapping("/{id}")
+    public ResponseEntity<DetailNoteRES> getNoteById(
+            @Parameter(hidden = true) @RequestHeader(required = false, value = "Authorization") String accessToken,
+            @PathVariable("id") UUID idFromPath
+    ) {
+        UUID idFromToken = getSubject(accessToken);
+        DetailNoteRES note = service.getNoteById(idFromToken, idFromPath);
+        return ResponseEntity.status(HttpStatus.OK).body(note);
+    }
+
+    @Operation(summary = "Get a note details", description = "Retrieves detailed information about a note by their full name.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Search results retrieved successfully."),
+            @ApiResponse(responseCode = "403", description = "Access denied.", content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "404", description = "Note not found.", content = @Content(examples = {})),
+            @ApiResponse(responseCode = "500", description = "Internal server error.", content = @Content(examples = {}))
+    })
     @GetMapping("{username}/{name}")
-    public ResponseEntity<DetailNoteRES> getPublicNote(
+    public ResponseEntity<DetailNoteRES> getNote(
             @Parameter(hidden = true) @RequestHeader(required = false, value = "Authorization") String accessToken,
             @PathVariable("username") String username,
             @PathVariable("name") String name

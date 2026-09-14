@@ -247,6 +247,19 @@ public class NoteServiceImpl implements NoteService {
 
     @Transactional(readOnly = true)
     @Override
+    public DetailNoteRES getNoteById(UUID idFromToken, UUID idFromPath) {
+        User requesting = (idFromToken != null) ? userRepository.findById(idFromToken).orElseThrow(EntityNotFoundException::new) : null;
+        Note requested = repository.findNote(idFromPath).orElseThrow(EntityNotFoundException::new);
+        User author = requested.getUser();
+        if (author != null) {
+            if (requested.isHidden()) validateAccess(idFromToken, author.getId());
+            if (author.isProfilePrivate()) followService.validateBidirectionalFollowAccess(requesting, author);
+        }
+        return new DetailNoteRES(requested);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
     public DetailNoteRES getNote(UUID idFromToken, String username, String name) {
         User requesting = (idFromToken != null) ? userRepository.findById(idFromToken).orElseThrow(EntityNotFoundException::new) : null;
         Note requested = repository.findByUserUsernameAndName(username, name)
