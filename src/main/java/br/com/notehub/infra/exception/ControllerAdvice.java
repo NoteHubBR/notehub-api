@@ -288,4 +288,10 @@ public class ControllerAdvice {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(List.of(new CustomResponse(error)));
     }
 
+    @ExceptionHandler(NoteNameAlreadyExists.class)
+    private ResponseEntity<List<CustomResponse>> handleNoteNameAlreadyExists(NoteNameAlreadyExists ex) {
+        FieldError error = new FieldError("note", "name", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(List.of(new CustomResponse(error)));
+    }
+
 }

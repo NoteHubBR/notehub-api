@@ -135,4 +135,10 @@ public class CustomExceptions {
 
     }
 
+    public static class NoteNameAlreadyExists extends BusinessException {
+        public NoteNameAlreadyExists() {
+            super("Nome já existe.");
+        }
+    }
+
 }

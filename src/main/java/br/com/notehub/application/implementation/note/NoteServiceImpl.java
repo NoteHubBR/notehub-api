@@ -14,6 +14,7 @@ import br.com.notehub.domain.tag.Tag;
 import br.com.notehub.domain.tag.TagRepository;
 import br.com.notehub.domain.user.User;
 import br.com.notehub.domain.user.UserRepository;
+import br.com.notehub.infra.exception.CustomExceptions;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +47,12 @@ public class NoteServiceImpl implements NoteService {
         if (!Objects.equals(idFromToken, idFromRequested)) {
             throw new AccessDeniedException("Usuário sem permissão.");
         }
+    }
+
+    private void validateNoteName(String username, @Nullable String currentName, String newName) {
+        if (Objects.equals(currentName, newName)) return;
+        boolean exists = repository.existsByUserUsernameAndName(username, newName);
+        if (exists) throw new CustomExceptions.NoteNameAlreadyExists();
     }
 
     private void deleteNoteAndFlush(Note note) {
@@ -90,6 +97,7 @@ public class NoteServiceImpl implements NoteService {
     @Override
     public LowDetailNoteRES create(UUID idFromToken, CreateNoteREQ req) {
         Note note = mapToNote(idFromToken, req);
+        validateNoteName(note.getUser().getUsername(), null, note.getName());
         repository.save(note);
         counter.updateNotesCount(note.getUser(), true);
         feeder.onNoteCreated(note.getId());
@@ -100,6 +108,7 @@ public class NoteServiceImpl implements NoteService {
     @Override
     public void edit(UUID idFromToken, UUID idFromPath, String name, String description, List<String> tags, boolean closed, boolean hidden) {
         changeField(idFromToken, idFromPath, note -> {
+            validateNoteName(note.getUser().getUsername(), note.getName(), name);
             List<String> oldTags = note.getTags().stream().map(Tag::getName).toList();
             note.setName(name);
             note.setFullName(createFullName(note));
@@ -116,6 +125,7 @@ public class NoteServiceImpl implements NoteService {
     @Override
     public void changeName(UUID idFromToken, UUID idFromPath, String name) {
         changeField(idFromToken, idFromPath, note -> {
+            validateNoteName(note.getUser().getUsername(), note.getName(), name);
             note.setName(name);
             note.setFullName(createFullName(note));
         });
