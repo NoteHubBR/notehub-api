@@ -1,5 +1,6 @@
 package br.com.notehub.implementation.note;
 
+import br.com.notehub.infra.exception.CustomExceptions;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.access.AccessDeniedException;
 
@@ -73,6 +74,41 @@ public class NoteEditionTest extends AbstractNoteServiceTest {
         service.setOrphanFullNameForUser(userId);
 
         verify(repository).setOrphanFullNameForUser(userId);
+    }
+
+    @Test
+    void shouldThrowNoteNameAlreadyExists_whenChangingNameToOneAlreadyUsedByAnotherNote() {
+        when(repository.findById(note.getId())).thenReturn(Optional.of(note));
+        when(repository.existsByUserUsernameAndName("owner", "taken-name")).thenReturn(true);
+
+        assertThatThrownBy(() -> service.changeName(owner.getId(), note.getId(), "taken-name"))
+                .isInstanceOf(CustomExceptions.NoteNameAlreadyExists.class);
+
+        assertThat(note.getName()).isEqualTo("old-name");
+        verify(repository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void shouldNotCheckDuplicate_whenChangingNameToTheSameCurrentName() {
+        when(repository.findById(note.getId())).thenReturn(Optional.of(note));
+
+        service.changeName(owner.getId(), note.getId(), "old-name");
+
+        verify(repository, never()).existsByUserUsernameAndName(any(), any());
+        verify(repository).saveAndFlush(note);
+    }
+
+    @Test
+    void shouldThrowNoteNameAlreadyExists_whenEditingNoteToOneAlreadyUsedByAnotherNote() {
+        when(repository.findById(note.getId())).thenReturn(Optional.of(note));
+        when(repository.existsByUserUsernameAndName("owner", "taken-name")).thenReturn(true);
+
+        assertThatThrownBy(() -> service.edit(owner.getId(), note.getId(), "taken-name", "desc", null, false, false))
+                .isInstanceOf(CustomExceptions.NoteNameAlreadyExists.class);
+
+        assertThat(note.getName()).isEqualTo("old-name");
+        verify(repository, never()).saveAndFlush(any());
+        verify(feeder, never()).onNoteHidden(any());
     }
 
 }
