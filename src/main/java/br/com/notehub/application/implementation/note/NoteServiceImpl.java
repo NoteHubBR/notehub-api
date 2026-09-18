@@ -14,6 +14,7 @@ import br.com.notehub.domain.tag.Tag;
 import br.com.notehub.domain.tag.TagRepository;
 import br.com.notehub.domain.user.User;
 import br.com.notehub.domain.user.UserRepository;
+import br.com.notehub.infra.exception.CustomExceptions;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -48,6 +49,12 @@ public class NoteServiceImpl implements NoteService {
         }
     }
 
+    private void validateNoteName(String username, @Nullable String currentName, String newName) {
+        if (Objects.equals(currentName, newName)) return;
+        boolean exists = repository.existsByUserUsernameAndName(username, newName);
+        if (exists) throw new CustomExceptions.NoteNameAlreadyExists();
+    }
+
     private void deleteNoteAndFlush(Note note) {
         repository.delete(note);
         repository.flush();
@@ -76,16 +83,21 @@ public class NoteServiceImpl implements NoteService {
         repository.saveAndFlush(note);
     }
 
+    private String createFullName(Note note) {
+        return String.format("%s/%s", note.getUser().getUsername(), note.getName());
+    }
+
     public Note mapToNote(UUID idFromToken, CreateNoteREQ req) {
         User user = userRepository.findById(idFromToken).orElseThrow(EntityNotFoundException::new);
         List<Tag> tags = findOrCreateTags(req.tags());
-        return new Note(user, req.title(), req.description(), req.markdown(), req.closed(), req.hidden(), tags);
+        return new Note(user, req.name(), req.description(), req.markdown(), req.closed(), req.hidden(), tags);
     }
 
     @Transactional
     @Override
     public LowDetailNoteRES create(UUID idFromToken, CreateNoteREQ req) {
         Note note = mapToNote(idFromToken, req);
+        validateNoteName(note.getUser().getUsername(), null, note.getName());
         repository.save(note);
         counter.updateNotesCount(note.getUser(), true);
         feeder.onNoteCreated(note.getId());
@@ -94,10 +106,12 @@ public class NoteServiceImpl implements NoteService {
 
     @Transactional
     @Override
-    public void edit(UUID idFromToken, UUID idFromPath, String title, String description, List<String> tags, boolean closed, boolean hidden) {
+    public void edit(UUID idFromToken, UUID idFromPath, String name, String description, List<String> tags, boolean closed, boolean hidden) {
         changeField(idFromToken, idFromPath, note -> {
+            validateNoteName(note.getUser().getUsername(), note.getName(), name);
             List<String> oldTags = note.getTags().stream().map(Tag::getName).toList();
-            note.setTitle(title);
+            note.setName(name);
+            note.setFullName(createFullName(note));
             note.setDescription(description);
             note.setTags(findOrCreateTags(tags));
             note.setClosed(closed);
@@ -109,8 +123,12 @@ public class NoteServiceImpl implements NoteService {
 
     @Transactional
     @Override
-    public void changeTitle(UUID idFromToken, UUID idFromPath, String title) {
-        changeField(idFromToken, idFromPath, note -> note.setTitle(title));
+    public void changeName(UUID idFromToken, UUID idFromPath, String name) {
+        changeField(idFromToken, idFromPath, note -> {
+            validateNoteName(note.getUser().getUsername(), note.getName(), name);
+            note.setName(name);
+            note.setFullName(createFullName(note));
+        });
     }
 
     @Transactional
@@ -146,6 +164,12 @@ public class NoteServiceImpl implements NoteService {
             note.setTags(findOrCreateTags(tags));
             removeOrphanTags(oldTagNames);
         });
+    }
+
+    @Transactional
+    @Override
+    public void setOrphanFullNameForUser(UUID uId) {
+        repository.setOrphanFullNameForUser(uId);
     }
 
     @Transactional
@@ -198,13 +222,13 @@ public class NoteServiceImpl implements NoteService {
 
     @Override
     public PageRES<LowDetailNoteRES> findPublicNotes(Pageable pageable, String q) {
-        Page<LowDetailNoteRES> page = repository.searchPublicNotesByTitleOrDescription(pageable, q).map(LowDetailNoteRES::new);
+        Page<LowDetailNoteRES> page = repository.searchPublicNotesByNameOrDescription(pageable, q).map(LowDetailNoteRES::new);
         return new PageRES<>(page);
     }
 
     @Override
     public PageRES<LowDetailNoteRES> findPrivateNotes(Pageable pageable, UUID idFromToken, String q) {
-        Page<LowDetailNoteRES> page = repository.searchPrivateNotesByTitleOrTag(pageable, idFromToken, q).map(LowDetailNoteRES::new);
+        Page<LowDetailNoteRES> page = repository.searchPrivateNotesByNameOrTag(pageable, idFromToken, q).map(LowDetailNoteRES::new);
         return new PageRES<>(page);
     }
 
@@ -233,9 +257,24 @@ public class NoteServiceImpl implements NoteService {
 
     @Transactional(readOnly = true)
     @Override
-    public DetailNoteRES getNote(UUID idFromToken, UUID idFromPath) {
+    public DetailNoteRES getNoteById(UUID idFromToken, UUID idFromPath) {
         User requesting = (idFromToken != null) ? userRepository.findById(idFromToken).orElseThrow(EntityNotFoundException::new) : null;
         Note requested = repository.findNote(idFromPath).orElseThrow(EntityNotFoundException::new);
+        User author = requested.getUser();
+        if (author != null) {
+            if (requested.isHidden()) validateAccess(idFromToken, author.getId());
+            if (author.isProfilePrivate()) followService.validateBidirectionalFollowAccess(requesting, author);
+        }
+        return new DetailNoteRES(requested);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public DetailNoteRES getNote(UUID idFromToken, String username, String name) {
+        User requesting = (idFromToken != null) ? userRepository.findById(idFromToken).orElseThrow(EntityNotFoundException::new) : null;
+        Note requested = repository.findByUserUsernameAndName(username, name)
+                .or(() -> repository.findByFullName(String.format("%s/%s", username, name)))
+                .orElseThrow(EntityNotFoundException::new);
         User author = requested.getUser();
         if (author != null) {
             if (requested.isHidden()) validateAccess(idFromToken, author.getId());
