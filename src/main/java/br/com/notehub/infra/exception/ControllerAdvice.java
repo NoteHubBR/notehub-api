@@ -159,7 +159,7 @@ public class ControllerAdvice {
     @ExceptionHandler(DisabledException.class)
     private ResponseEntity<List<CustomResponse>> handleDisabledException(DisabledException ex) {
         List<FieldError> errors = new ArrayList<>();
-        errors.add(new FieldError("user", "username", ex.getMessage()));
+        errors.add(new FieldError("user", "identifier", ex.getMessage()));
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errors.stream().map(CustomResponse::new).toList());
     }
 

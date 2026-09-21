@@ -77,7 +77,7 @@ public class AuthServiceImpl implements AuthService {
                 ? userRepository.findByEmail(identifier)
                 : userRepository.findByUsername(identifier))
                 .orElseThrow(() -> new BadCredentialsException("identifier"));
-        if (!user.isActive()) throw new DisabledException("Email não confirmado");
+        if (!user.isActive()) throw new DisabledException("Email não confirmado.");
 
         boolean matches = encoder.matches(password, user.getPassword());
         if (!matches) throw new BadCredentialsException("password");
