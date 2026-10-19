@@ -9,7 +9,7 @@ import java.util.List;
 public record CreateNoteREQ(
         @NotBlank(message = "Não pode ser vazio")
         @Pattern(
-                regexp = "^[a-zA-Z0-9_.-]+$",
+                regexp = "^[a-zA-Z0-9]+([._-][a-zA-Z0-9]+)*$",
                 message = "Apenas letras, números, _ e ."
         )
         @Size(min = 1, max = 255, message = "Tamanho inválido")

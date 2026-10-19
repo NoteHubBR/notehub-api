@@ -9,10 +9,10 @@ public record ChangeUsernameREQ(
         @NoForbiddenWords(message = "Não pode")
         @NotBlank(message = "Não pode ser vazio")
         @Pattern(
-                regexp = "^[a-zA-Z0-9_.-]+$",
+                regexp = "^[a-zA-Z0-9]+([._-][a-zA-Z0-9]+)*$",
                 message = "Apenas letras, números, _ e ."
         )
-        @Size(min = 2, max = 12, message = "Tamanho inválido")
+        @Size(min = 2, max = 24, message = "Tamanho inválido")
         String username
 ) {
 }

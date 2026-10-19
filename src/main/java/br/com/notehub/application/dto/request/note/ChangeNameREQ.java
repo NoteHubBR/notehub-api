@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 public record ChangeNameREQ(
         @NotBlank(message = "Não pode ser vazio")
         @Pattern(
-                regexp = "^[a-zA-Z0-9_.-]+$",
+                regexp = "^[a-zA-Z0-9]+([._-][a-zA-Z0-9]+)*$",
                 message = "Apenas letras, números, _ e ."
         )
         @Size(min = 1, max = 255, message = "Tamanho inválido")
