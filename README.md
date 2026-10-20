@@ -6,13 +6,13 @@
 
 <div align="center">
   <a href="https://notehub.com.br">
-    <img width="10%" height="10%" src="https://notehub.com.br/imgs/favicon.png">
+    <img width="10%" height="10%" src="https://notehub.com.br/imgs/favicon256.png">
   </a>
 </div>
 <br>
 <div align="center">
   <a href="LICENSE"><img width="100px" height="21px" src="https://img.shields.io/badge/license-MIT-green.svg"></a>
-  <a href="https://github.com/notehubbr/notehub-api/releases/tag/v3.1"><img width="100px" height="25px" src="https://img.shields.io/badge/notehub-3.1-7c3aed"></a>
+  <a href="https://github.com/notehubbr/notehub-api/releases/tag/v3.1"><img width="100px" height="21px" src="https://img.shields.io/badge/notehub-3.1-7c3aed"></a>
 </div>
 
 ## Instalação
