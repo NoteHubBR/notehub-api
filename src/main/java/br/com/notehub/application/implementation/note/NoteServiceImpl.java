@@ -90,7 +90,7 @@ public class NoteServiceImpl implements NoteService {
     public Note mapToNote(UUID idFromToken, CreateNoteREQ req) {
         User user = userRepository.findById(idFromToken).orElseThrow(EntityNotFoundException::new);
         List<Tag> tags = findOrCreateTags(req.tags());
-        return new Note(user, req.name(), req.description(), req.markdown(), req.closed(), req.hidden(), tags);
+        return new Note(user, req.name(), req.description(), req.markdown(), req.closed(), req.hidden(), req.encrypted(), tags);
     }
 
     @Transactional
