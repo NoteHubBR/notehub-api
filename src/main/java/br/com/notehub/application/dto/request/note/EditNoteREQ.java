@@ -22,6 +22,8 @@ public record EditNoteREQ(
         @Size(max = 255, message = "Além do limite")
         String description,
 
+        String markdown,
+
         @Size(max = 12, message = "Além do limite")
         List<
                 @NotBlank(message = "Não pode ser vazio")
