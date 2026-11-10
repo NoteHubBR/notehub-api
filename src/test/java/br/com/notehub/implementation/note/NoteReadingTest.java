@@ -27,7 +27,7 @@ public class NoteReadingTest extends AbstractNoteServiceTest {
 
     @Test
     void shouldFallBackToFullName_whenLiveJoinFindsNothing_orphanedNote() {
-        Note orphanNote = new Note(owner, "orphan-note", null, "# md", false, false, null);
+        Note orphanNote = new Note(owner, "orphan-note", null, "# md", false, false, false, null);
         orphanNote.setId(UUID.randomUUID());
         orphanNote.setUser(null);
         orphanNote.setFullName(orphanNote.getId().toString().substring(0, 8) + "/orphan-note");

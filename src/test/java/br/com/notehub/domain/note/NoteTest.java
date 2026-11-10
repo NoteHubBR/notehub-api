@@ -13,7 +13,7 @@ public class NoteTest {
     @Test
     void shouldSetFullName_whenCreatingNote() {
         User owner = User.signup("owner@notehub.com.br", "owner", "OWNER", "123");
-        Note note = new Note(owner, "my-note", null, "# md", false, false, null);
+        Note note = new Note(owner, "my-note", null, "# md", false, false, false, null);
         assertThat(note.getFullName()).isEqualTo("owner/my-note");
     }
 
