@@ -109,9 +109,10 @@ public interface NoteRepository extends JpaRepository<Note, UUID> {
                 WHERE tn.id = n.id
                 AND LOWER(t.name) LIKE LOWER(CONCAT('%', CAST(:tag AS text), '%'))
             ))
-            AND (:type IS NULL AND n.hidden = false OR (
+            AND (:type IS NULL AND n.encrypted = false AND n.hidden = false OR (
                 (:type = 'open' AND n.closed = false AND n.hidden = false) OR
                 (:type = 'closed' AND n.closed = true AND n.hidden = false) OR
+                (:type = 'encrypted' AND n.encrypted = true AND n.hidden = false) OR
                 (:type = 'hidden' AND n.hidden = true)
             ))
             """)

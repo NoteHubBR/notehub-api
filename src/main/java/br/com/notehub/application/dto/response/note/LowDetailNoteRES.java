@@ -21,6 +21,7 @@ public record LowDetailNoteRES(
         String modified_at,
         boolean modified,
         boolean closed,
+        boolean encrypted,
         boolean hidden,
         int comments_count,
         int flames_count
@@ -37,6 +38,7 @@ public record LowDetailNoteRES(
                 note.getModifiedAt().atZone(ZoneId.of("America/Sao_Paulo")).format(DateTimeFormatter.ofPattern("d/M/yy HH:mm", Locale.of("pt-BR"))),
                 note.isModified(),
                 note.isClosed(),
+                note.isEncrypted(),
                 note.isHidden(),
                 note.getCommentsCount(),
                 note.getFlamesCount()

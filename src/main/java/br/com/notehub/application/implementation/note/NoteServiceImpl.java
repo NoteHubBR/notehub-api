@@ -90,7 +90,7 @@ public class NoteServiceImpl implements NoteService {
     public Note mapToNote(UUID idFromToken, CreateNoteREQ req) {
         User user = userRepository.findById(idFromToken).orElseThrow(EntityNotFoundException::new);
         List<Tag> tags = findOrCreateTags(req.tags());
-        return new Note(user, req.name(), req.description(), req.markdown(), req.closed(), req.hidden(), tags);
+        return new Note(user, req.name(), req.description(), req.markdown(), req.closed(), req.hidden(), req.encrypted(), tags);
     }
 
     @Transactional
@@ -106,16 +106,18 @@ public class NoteServiceImpl implements NoteService {
 
     @Transactional
     @Override
-    public void edit(UUID idFromToken, UUID idFromPath, String name, String description, List<String> tags, boolean closed, boolean hidden) {
+    public void edit(UUID idFromToken, UUID idFromPath, String name, String description, String markdown, List<String> tags, boolean closed, boolean hidden, boolean encrypted) {
         changeField(idFromToken, idFromPath, note -> {
             validateNoteName(note.getUser().getUsername(), note.getName(), name);
             List<String> oldTags = note.getTags().stream().map(Tag::getName).toList();
             note.setName(name);
             note.setFullName(createFullName(note));
             note.setDescription(description);
+            note.setMarkdown(markdown);
             note.setTags(findOrCreateTags(tags));
             note.setClosed(closed);
             note.setHidden(hidden);
+            note.setEncrypted(encrypted);
             removeOrphanTags(oldTags);
         });
         feeder.onNoteHidden(idFromPath);

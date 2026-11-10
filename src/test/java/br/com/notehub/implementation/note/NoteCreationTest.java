@@ -16,7 +16,7 @@ public class NoteCreationTest extends AbstractNoteServiceTest {
         when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
         when(repository.existsByUserUsernameAndName("owner", "old-name")).thenReturn(true);
 
-        CreateNoteREQ req = new CreateNoteREQ("old-name", "desc", "# md", false, false, null);
+        CreateNoteREQ req = new CreateNoteREQ("old-name", "desc", "# md", false, false, false, null);
 
         assertThatThrownBy(() -> service.create(owner.getId(), req))
                 .isInstanceOf(CustomExceptions.NoteNameAlreadyExists.class);

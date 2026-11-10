@@ -53,6 +53,8 @@ public class Note {
 
     private boolean hidden;
 
+    private boolean encrypted;
+
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.MERGE}, fetch = FetchType.LAZY)
     @JoinTable(name = "note_tags", joinColumns = @JoinColumn(name = "note_id"), inverseJoinColumns = @JoinColumn(name = "tag_id"))
     private List<Tag> tags = new ArrayList<>();
@@ -65,12 +67,13 @@ public class Note {
     private Set<Flame> flames = new HashSet<>();
     private int flamesCount = 0;
 
-    public Note(User user, String name, String description, String markdown, boolean closed, boolean hidden, List<Tag> tags) {
+    public Note(User user, String name, String description, String markdown, boolean closed, boolean hidden, boolean encrypted, List<Tag> tags) {
         this.user = user;
         this.name = name;
         this.fullName = String.format("%s/%s", user.getUsername(), name);
         this.closed = closed;
         this.hidden = hidden;
+        this.encrypted = encrypted;
         if (description != null) this.description = description;
         if (markdown != null) this.markdown = markdown;
         if (tags != null) this.tags = tags;

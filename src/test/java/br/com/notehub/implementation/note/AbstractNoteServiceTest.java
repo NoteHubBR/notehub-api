@@ -49,7 +49,7 @@ public abstract class AbstractNoteServiceTest {
         owner = User.signup("owner@notehub.com.br", "owner", "OWNER", "123");
         owner.setId(UUID.randomUUID());
 
-        note = new Note(owner, "old-name", null, "# md", false, false, null);
+        note = new Note(owner, "old-name", null, "# md", false, false, false, null);
         note.setId(UUID.randomUUID());
     }
 

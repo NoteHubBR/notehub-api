@@ -42,7 +42,7 @@ public class NoteEditionTest extends AbstractNoteServiceTest {
     void shouldUpdateNameAndFullName_whenEditingNote() {
         when(repository.findById(note.getId())).thenReturn(Optional.of(note));
 
-        service.edit(owner.getId(), note.getId(), "new-name", "new description", null, true, true);
+        service.edit(owner.getId(), note.getId(), "new-name", "new description", null, null, true, true, false);
 
         assertThat(note.getName()).isEqualTo("new-name");
         assertThat(note.getFullName()).isEqualTo("owner/new-name");
@@ -58,7 +58,7 @@ public class NoteEditionTest extends AbstractNoteServiceTest {
         when(repository.findById(note.getId())).thenReturn(Optional.of(note));
         UUID someoneElseId = UUID.randomUUID();
 
-        assertThatThrownBy(() -> service.edit(someoneElseId, note.getId(), "new-name", "desc", null, false, false))
+        assertThatThrownBy(() -> service.edit(someoneElseId, note.getId(), "new-name", "desc", null, null, false, false, false))
                 .isInstanceOf(AccessDeniedException.class);
 
         assertThat(note.getName()).isEqualTo("old-name");
@@ -103,7 +103,7 @@ public class NoteEditionTest extends AbstractNoteServiceTest {
         when(repository.findById(note.getId())).thenReturn(Optional.of(note));
         when(repository.existsByUserUsernameAndName("owner", "taken-name")).thenReturn(true);
 
-        assertThatThrownBy(() -> service.edit(owner.getId(), note.getId(), "taken-name", "desc", null, false, false))
+        assertThatThrownBy(() -> service.edit(owner.getId(), note.getId(), "taken-name", "desc", null, null, false, false, false))
                 .isInstanceOf(CustomExceptions.NoteNameAlreadyExists.class);
 
         assertThat(note.getName()).isEqualTo("old-name");
