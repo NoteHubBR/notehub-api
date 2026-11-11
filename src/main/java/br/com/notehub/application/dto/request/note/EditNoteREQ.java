@@ -1,5 +1,6 @@
 package br.com.notehub.application.dto.request.note;
 
+import br.com.notehub.application.validation.constraints.ValidName;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -8,10 +9,7 @@ import java.util.List;
 
 public record EditNoteREQ(
         @NotBlank(message = "Não pode ser vazio")
-        @Pattern(
-                regexp = "^[a-zA-Z0-9]+([._-][a-zA-Z0-9]+)*$",
-                message = "Apenas letras, números, _ e ."
-        )
+        @ValidName
         @Size(min = 1, max = 255, message = "Tamanho inválido")
         String name,
 

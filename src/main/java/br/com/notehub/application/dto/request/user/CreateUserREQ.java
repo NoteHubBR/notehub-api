@@ -1,6 +1,7 @@
 package br.com.notehub.application.dto.request.user;
 
 import br.com.notehub.application.validation.constraints.NoForbiddenWords;
+import br.com.notehub.application.validation.constraints.ValidName;
 import br.com.notehub.domain.user.User;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -17,10 +18,7 @@ public record CreateUserREQ(
 
         @NoForbiddenWords(message = "Não pode")
         @NotBlank(message = "Não pode ser vazio")
-        @Pattern(
-                regexp = "^[a-zA-Z0-9]+([._-][a-zA-Z0-9]+)*$",
-                message = "Apenas letras, números, _ e ."
-        )
+        @ValidName
         @Size(min = 2, max = 24, message = "Tamanho inválido")
         String username,
 
