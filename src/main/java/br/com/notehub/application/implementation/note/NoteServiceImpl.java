@@ -55,6 +55,16 @@ public class NoteServiceImpl implements NoteService {
         if (exists) throw new CustomExceptions.NoteNameAlreadyExists();
     }
 
+    private void updateCountIfPublic(Note note, boolean increment) {
+        if (note.isHidden()) return;
+        counter.updateNotesCount(note.getUser(), increment);
+    }
+
+    private void updateCountOnHiddenChange(Note note, boolean wasHidden, boolean willBeHidden) {
+        if (wasHidden == willBeHidden) return;
+        counter.updateNotesCount(note.getUser(), !willBeHidden);
+    }
+
     private void deleteNoteAndFlush(Note note) {
         repository.delete(note);
         repository.flush();
@@ -99,7 +109,7 @@ public class NoteServiceImpl implements NoteService {
         Note note = mapToNote(idFromToken, req);
         validateNoteName(note.getUser().getUsername(), null, note.getName());
         repository.save(note);
-        counter.updateNotesCount(note.getUser(), true);
+        updateCountIfPublic(note, true);
         feeder.onNoteCreated(note.getId());
         return new LowDetailNoteRES(note);
     }
@@ -109,6 +119,7 @@ public class NoteServiceImpl implements NoteService {
     public void edit(UUID idFromToken, UUID idFromPath, String name, String description, String markdown, List<String> tags, boolean closed, boolean hidden, boolean encrypted) {
         changeField(idFromToken, idFromPath, note -> {
             validateNoteName(note.getUser().getUsername(), note.getName(), name);
+            updateCountOnHiddenChange(note, note.isHidden(), hidden);
             List<String> oldTags = note.getTags().stream().map(Tag::getName).toList();
             note.setName(name);
             note.setFullName(createFullName(note));
@@ -154,7 +165,11 @@ public class NoteServiceImpl implements NoteService {
     @Transactional
     @Override
     public void changeHidden(UUID idFromToken, UUID idFromPath) {
-        changeField(idFromToken, idFromPath, note -> note.setHidden(!note.isHidden()));
+        changeField(idFromToken, idFromPath, note -> {
+            boolean wasHidden = note.isHidden();
+            counter.updateNotesCount(note.getUser(), wasHidden);
+            note.setHidden(!wasHidden);
+        });
         feeder.onNoteHidden(idFromPath);
     }
 
@@ -180,9 +195,9 @@ public class NoteServiceImpl implements NoteService {
         Note note = repository.findById(idFromPath).orElseThrow(EntityNotFoundException::new);
         validateAccess(idFromToken, note.getUser().getId());
         List<String> oldTagNames = note.getTags().stream().map(Tag::getName).toList();
+        updateCountIfPublic(note, false);
         deleteNoteAndFlush(note);
         removeOrphanTags(oldTagNames);
-        counter.updateNotesCount(note.getUser(), false);
     }
 
     @Transactional
