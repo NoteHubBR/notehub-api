@@ -59,11 +59,18 @@ public class FlameServiceImpl implements FlameService {
 
     @Transactional(readOnly = true)
     @Override
-    public PageRES<DetailFlameRES> getUserFlames(UUID userIdFromToken, Pageable pageable, String username, String q) {
+    public PageRES<DetailFlameRES> getAllUserFlamesById(Pageable pageable, UUID idFromToken) {
+        Page<DetailFlameRES> page = repository.findAllByUserId(pageable, idFromToken).map(DetailFlameRES::new);
+        return new PageRES<>(page);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public PageRES<DetailFlameRES> searchUserFlamesBySpecs(Pageable pageable, UUID userIdFromToken, String username, String q) {
         User requesting = (userIdFromToken != null) ? userRepository.findById(userIdFromToken).orElseThrow(EntityNotFoundException::new) : null;
         User requested = userRepository.findByUsername(username).orElseThrow(EntityNotFoundException::new);
         followService.validateBidirectionalFollowAccess(requesting, requested);
-        Page<DetailFlameRES> page = repository.getUserFlames(pageable, username, q).map(DetailFlameRES::new);
+        Page<DetailFlameRES> page = repository.getUserFlamesBySpecs(pageable, username, q).map(DetailFlameRES::new);
         return new PageRES<>(page);
     }
 
