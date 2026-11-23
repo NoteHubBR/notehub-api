@@ -72,23 +72,50 @@ public class FlameController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
-    @Operation(summary = "Get user inflamed notes", description = "Retrieves a page of flames.")
+    @Operation(
+            summary = "Get authenticated user flames",
+            description = "Retrieves a page of flames given by the authenticated user. Flames on other users' hidden notes are omitted."
+    )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Page results retrieved successfully."),
+            @ApiResponse(responseCode = "200", description = "Fetch results retrieved successfully."),
+            @ApiResponse(responseCode = "400", description = "Invalid pageable criteria.", content = @Content(examples = {})),
+            @ApiResponse(responseCode = "403", description = "Invalid token.", content = @Content(examples = {})),
+            @ApiResponse(responseCode = "500", description = "Internal server error.", content = @Content(examples = {}))
+    })
+    @GetMapping("/private")
+    public ResponseEntity<PageRES<DetailFlameRES>> getAllUserFlamesById(
+            @Parameter(hidden = true) @RequestHeader("Authorization") String accessToken,
+            @ParameterObject @PageableDefault(page = 0, size = 10, sort = {"createdAt"}, direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        UUID idFromToken = getSubject(accessToken);
+        PageRES<DetailFlameRES> page = service.getAllUserFlamesById(pageable, idFromToken);
+        return ResponseEntity.status(HttpStatus.OK).body(page);
+    }
+
+    @Operation(
+            summary = "Search user flames by multiple criteria",
+            description = """
+                     Searches flames of a specific user (username in path), with an optional
+                     text query (q) matched against note name, description, tags and the
+                     note owner's username and display name.
+                    """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Search results retrieved successfully."),
             @ApiResponse(responseCode = "400", description = "Invalid pageable criteria.", content = @Content(examples = {})),
             @ApiResponse(responseCode = "403", description = "Invalid token.", content = @Content(examples = {})),
             @ApiResponse(responseCode = "404", description = "User not found.", content = @Content(examples = {})),
             @ApiResponse(responseCode = "500", description = "Internal server error.", content = @Content(examples = {}))
     })
-    @GetMapping("/{username}")
-    public ResponseEntity<PageRES<DetailFlameRES>> getFlames(
+    @GetMapping("/{username}/specs")
+    public ResponseEntity<PageRES<DetailFlameRES>> searchUserFlamesBySpecs(
             @Parameter(hidden = true) @RequestHeader(required = false, value = "Authorization") String accessToken,
             @ParameterObject @PageableDefault(page = 0, size = 25, sort = {"createdAt"}, direction = Sort.Direction.DESC) Pageable pageable,
             @PathVariable("username") String username,
             @RequestParam(required = false) String q
     ) {
         UUID idFromToken = getSubject(accessToken);
-        PageRES<DetailFlameRES> page = service.getUserFlames(idFromToken, pageable, username, q);
+        PageRES<DetailFlameRES> page = service.searchUserFlamesBySpecs(pageable, idFromToken, username, q);
         return ResponseEntity.status(HttpStatus.OK).body(page);
     }
 
