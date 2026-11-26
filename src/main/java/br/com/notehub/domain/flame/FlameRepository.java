@@ -4,6 +4,7 @@ import br.com.notehub.domain.note.Note;
 import br.com.notehub.domain.user.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,6 +19,16 @@ public interface FlameRepository extends JpaRepository<Flame, UUID> {
     Optional<Flame> findByUserIdAndNoteId(UUID userId, UUID noteId);
 
     boolean existsByUserAndNote(User user, Note note);
+
+    @EntityGraph(attributePaths = {"note", "note.user"})
+    @Query("""
+            SELECT f FROM Flame f
+            JOIN f.note n
+            JOIN n.user nu
+            WHERE f.user.id = :id
+            AND (n.hidden = false OR nu.id = :id)
+            """)
+    Page<Flame> findAllByUserId(Pageable pageable, @Param("id") UUID id);
 
     @Query("""
             SELECT DISTINCT f FROM Flame f
@@ -40,6 +51,6 @@ public interface FlameRepository extends JpaRepository<Flame, UUID> {
                    ))
             )
             """)
-    Page<Flame> getUserFlames(Pageable pageable, @Param("username") String username, @Param("q") String q);
+    Page<Flame> getUserFlamesBySpecs(Pageable pageable, @Param("username") String username, @Param("q") String q);
 
 }

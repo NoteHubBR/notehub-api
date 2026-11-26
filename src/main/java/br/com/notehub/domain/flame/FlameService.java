@@ -14,6 +14,8 @@ public interface FlameService {
 
     void deflame(UUID userIdFromToken, UUID noteIdFromPath);
 
-    PageRES<DetailFlameRES> getUserFlames(UUID userIdFromToken, Pageable pageable, String username, String q);
+    PageRES<DetailFlameRES> getAllUserFlamesById(Pageable pageable, UUID idFromToken);
+
+    PageRES<DetailFlameRES> searchUserFlamesBySpecs(Pageable pageable, UUID idFromToken, String username, String q);
 
 }

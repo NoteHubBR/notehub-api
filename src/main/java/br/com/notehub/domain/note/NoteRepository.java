@@ -35,6 +35,7 @@ public interface NoteRepository extends JpaRepository<Note, UUID> {
             LEFT JOIN FETCH n.tags t
             WHERE (u IS NULL OR u.profilePrivate = false)
             AND n.hidden = false
+            AND n.encrypted = false
             AND (
                 :q IS NULL OR LOWER(n.name) LIKE LOWER(CONCAT('%', CAST(:q AS text), '%')) OR
                 :q IS NULL OR LOWER(n.description) LIKE LOWER(CONCAT('%', CAST(:q AS text), '%'))
@@ -48,6 +49,7 @@ public interface NoteRepository extends JpaRepository<Note, UUID> {
             LEFT JOIN FETCH n.tags t
             WHERE (u IS NULL OR u.profilePrivate = false)
             AND n.hidden = false
+            AND n.encrypted = false
             AND (
                 EXISTS (
                     SELECT 1 FROM Tag tag
@@ -109,12 +111,11 @@ public interface NoteRepository extends JpaRepository<Note, UUID> {
                 WHERE tn.id = n.id
                 AND LOWER(t.name) LIKE LOWER(CONCAT('%', CAST(:tag AS text), '%'))
             ))
-            AND (:type IS NULL AND n.encrypted = false AND n.hidden = false OR (
-                (:type = 'open' AND n.closed = false AND n.hidden = false) OR
-                (:type = 'closed' AND n.closed = true AND n.hidden = false) OR
+            AND (
+                (:type IS NULL OR :type = 'open') AND n.encrypted = false AND n.hidden = false OR
                 (:type = 'encrypted' AND n.encrypted = true AND n.hidden = false) OR
                 (:type = 'hidden' AND n.hidden = true)
-            ))
+            )
             """)
     Page<Note> searchUserNotesBySpecs(Pageable pageable,
                                       @Param("username") String username,

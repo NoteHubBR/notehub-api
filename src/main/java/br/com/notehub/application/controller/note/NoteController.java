@@ -326,7 +326,7 @@ public class NoteController {
                      - Username (path parameter)
                      - Text query (q) for name
                      - Tag name (tag)
-                     - Type (open, closed and hidden)
+                     - Type (open, encrypted and hidden)
                     """
     )
     @ApiResponses(value = {
